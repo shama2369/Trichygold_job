@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trichy Gold Campaign Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-section, .query-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .channel-details {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .channel-details h4 {
+            margin-top: 0;
+        }
+        #queryResult {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trichy Gold Campaign Management</h1>
+
+        <!-- Campaign Form -->
+        <div class="form-section">
+            <h2>Create Campaign</h2>
+            <label for="campaignId">Campaign ID:</label>
+            <input type="text" id="campaignId" required>
+
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+
+            <label for="description">Description:</label>
+            <textarea id="description"></textarea>
+
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" required>
+
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" required>
+
+            <label for="budget">Budget (USD):</label>
+            <input type="number" id="budget" required>
+
+            <label for="status">Status:</label>
+            <select id="status">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="completed">Completed</option>
+            </select>
+
+            <h3>Target Audience</h3>
+            <label for="age">Age Range:</label>
+            <input type="text" id="age" placeholder="e.g., 18-65">
+
+            <label for="gender">Gender:</label>
+            <select id="gender">
+                <option value="all">All</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+
+            <label for="location">Location:</label>
+            <input type="text" id="location" placeholder="e.g., Trichy">
+
+            <h3>Goals</h3>
+            <label for="sales">Sales (USD):</label>
+            <input type="number" id="sales" value="0">
+
+            <label for="impressions">Impressions:</label>
+            <input type="number" id="impressions" value="0">
+
+            <label for="conversions">Conversions:</label>
+            <input type="number" id="conversions" value="0">
+
+            <h3>Channel Details</h3>
+            <div id="channelDetails">
+                <div class="channel-details">
+                    <label for="channelType1">Channel Type:</label>
+                    <select class="channelType" id="channelType1">
+                        <option value="social_media">Social Media</option>
+                        <option value="print_media">Print Media</option>
+                        <option value="tv">TV</option>
+                        <option value="radio">Radio</option>
+                        <option value="events">Events</option>
+                    </select>
+
+                    <label for="channelName1">Channel Name:</label>
+                    <input type="text" class="channelName" id="channelName1" placeholder="e.g., Facebook Ad">
+
+                    <label for="channelCost1">Cost (USD):</label>
+                    <input type="number" class="channelCost" id="channelCost1">
+
+                    <!-- Social Media Specific -->
+                    <div class="socialMediaFields" style="display: none;">
+                        <label for="platform1">Platform:</label>
+                        <select class="platform" id="platform1">
+                            <option value="facebook">Facebook</option>
+                            <option value="google">Google</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">Twitter</option>
+                        </select>
+
+                        <label for="adType1">Ad Type:</label>
+                        <select class="adType" id="adType1">
+                            <option value="search">Search</option>
+                            <option value="display">Display</option>
+                            <option value="video">Video</option>
+                        </select>
+
+                        <label for="postType1">Post Type:</label>
+                        <select class="postType" id="postType1">
+                            <option value="single_post">Single Post</option>
+                            <option value="carousel">Carousel</option>
+                            <option value="story">Story</option>
+                        </select>
+                    </div>
+
+                    <!-- Print Media Specific -->
+                    <div class="printMediaFields" style="display: none;">
+                        <label for="mediaType1">Media Type:</label>
+                        <select class="mediaType" id="mediaType1">
+                            <option value="newspaper">Newspaper</option>
+                            <option value="magazine">Magazine</option>
+                            <option value="flyer">Flyer</option>
+                        </select>
+
+                        <label for="publication1">Publication:</label>
+                        <input type="text" class="publication" id="publication1" placeholder="e.g., Trichy Times">
+
+                        <label for="adSize1">Ad Size:</label>
+                        <input type="text" class="adSize" id="adSize1" placeholder="e.g., Full Page">
+
+                        <label for="publicationDate1">Publication Date:</label>
+                        <input type="date" class="publicationDate" id="publicationDate1">
+
+                        <label for="distributionArea1">Distribution Area:</label>
+                        <input type="text" class="distributionArea" id="distributionArea1" placeholder="e.g., Trichy">
+
+                        <label for="quantity1">Quantity:</label>
+                        <input type="number" class="quantity" id="quantity1" value="0">
+                    </div>
+
+                    <!-- TV Specific -->
+                    <div class="tvFields" style="display: none;">
+                        <label for="station1">Station:</label>
+                        <input type="text" class="station" id="station1" placeholder="e.g., Trichy TV">
+
+                        <label for="slot1">Slot:</label>
+                        <input type="text" class="slot" id="slot1" placeholder="e.g., Prime Time">
+
+                        <label for="distributionDate1">Distribution Date:</label>
+                        <input type="date" class="distributionDate" id="distributionDate1">
+                    </div>
+
+                    <!-- Radio Specific -->
+                    <div class="radioFields" style="display: none;">
+                        <label for="radioStation1">Station:</label>
+                        <input type="text" class="radioStation" id="radioStation1" placeholder="e.g., Radio Mirchi">
+
+                        <label for="radioSlot1">Slot:</label>
+                        <input type="text" class="radioSlot" id="radioSlot1" placeholder="e.g., Morning Show">
+
+                        <label for="radioSubject1">Subject:</label>
+                        <input type="text" class="radioSubject" id="radioSubject1" placeholder="e.g., Jewelry Ad">
+                    </div>
+
+                    <!-- Events Specific -->
+                    <div class="eventsFields" style="display: none;">
+                        <label for="eventName1">Event Name:</label>
+                        <input type="text" class="eventName" id="eventName1" placeholder="e.g., Diwali Exhibition">
+
+                        <label for="eventDate1">Event Date:</label>
+                        <input type="date" class="eventDate" id="eventDate1">
+                    </div>
+
+                    <button type="button" onclick="removeChannel(this)">Remove Channel</button>
+                </div>
+            </div>
+            <button type="button" onclick="addChannel()">Add Channel</button>
+            <button type="button" onclick="submitCampaign()">Submit Campaign</button>
+        </div>
+
+        <!-- Query Section -->
+        <div class="query-section">
+            <h2>Query Campaigns</h2>
+            <label for="queryCampaignId">Campaign ID:</label>
+            <input type="text" id="queryCampaignId">
+
+            <label for="queryStatus">Status:</label>
+            <select id="queryStatus">
+                <option value="">Any</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="completed">Completed</option>
+            </select>
+
+            <button type="button" onclick="queryCampaigns()">Run Query</button>
+            <button type="button" onclick="exportCampaigns()">Export to Excel</button>
+
+            <div id="queryResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let channelCount = 1;
+
+        function addChannel() {
+            channelCount++;
+            const channelDiv = document.createElement('div');
+            channelDiv.className = 'channel-details';
+            channelDiv.innerHTML = `
+                <label for="channelType${channelCount}">Channel Type:</label>
+                <select class="channelType" id="channelType${channelCount}" onchange="toggleChannelFields(this)">
+                    <option value="social_media">Social Media</option>
+                    <option value="print_media">Print Media</option>
+                    <option value="tv">TV</option>
+                    <option value="radio">Radio</option>
+                    <option value="events">Events</option>
+                </select>
+
+                <label for="channelName${channelCount}">Channel Name:</label>
+                <input type="text" class="channelName" id="channelName${channelCount}" placeholder="e.g., Facebook Ad">
+
+                <label for="channelCost${channelCount}">Cost (USD):</label>
+                <input type="number" class="channelCost" id="channelCost${channelCount}">
+
+                <div class="socialMediaFields" style="display: none;">
+                    <label for="platform${channelCount}">Platform:</label>
+                    <select class="platform" id="platform${channelCount}">
+                        <option value="facebook">Facebook</option>
+                        <option value="google">Google</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter</option>
+                    </select>
+
+                    <label for="adType${channelCount}">Ad Type:</label>
+                    <select class="adType" id="adType${channelCount}">
+                        <option value="search">Search</option>
+                        <option value="display">Display</option>
+                        <option value="video">Video</option>
+                    </select>
+
+                    <label for="postType${channelCount}">Post Type:</label>
+                    <select class="postType" id="postType${channelCount}">
+                        <option value="single_post">Single Post</option>
+                        <option value="carousel">Carousel</option>
+                        <option value="story">Story</option>
+                    </select>
+                </div>
+
+                <div class="printMediaFields" style="display: none;">
+                    <label for="mediaType${channelCount}">Media Type:</label>
+                    <select class="mediaType" id="mediaType${channelCount}">
+                        <option value="newspaper">Newspaper</option>
+                        <option value="magazine">Magazine</option>
+                        <option value="flyer">Flyer</option>
+                    </select>
+
+                    <label for="publication${channelCount}">Publication:</label>
+                    <input type="text" class="publication" id="publication${channelCount}" placeholder="e.g., Trichy Times">
+
+                    <label for="adSize${channelCount}">Ad Size:</label>
+                    <input type="text" class="adSize" id="adSize${channelCount}" placeholder="e.g., Full Page">
+
+                    <label for="publicationDate${channelCount}">Publication Date:</label>
+                    <input type="date" class="publicationDate" id="publicationDate${channelCount}">
+
+                    <label for="distributionArea${channelCount}">Distribution Area:</label>
+                    <input type="text" class="distributionArea" id="distributionArea${channelCount}" placeholder="e.g., Trichy">
+
+                    <label for="quantity${channelCount}">Quantity:</label>
+                    <input type="number" class="quantity" id="quantity${channelCount}" value="0">
+                </div>
+
+                <div class="tvFields" style="display: none;">
+                    <label for="station${channelCount}">Station:</label>
+                    <input type="text" class="station" id="station${channelCount}" placeholder="e.g., Trichy TV">
+
+                    <label for="slot${channelCount}">Slot:</label>
+                    <input type="text" class="slot" id="slot${channelCount}" placeholder="e.g., Prime Time">
+
+                    <label for="distributionDate${channelCount}">Distribution Date:</label>
+                    <input type="date" class="distributionDate" id="distributionDate${channelCount}">
+                </div>
+
+                <div class="radioFields" style="display: none;">
+                    <label for="radioStation${channelCount}">Station:</label>
+                    <input type="text" class="radioStation" id="radioStation${channelCount}" placeholder="e.g., Radio Mirchi">
+
+                    <label for="radioSlot${channelCount}">Slot:</label>
+                    <input type="text" class="radioSlot" id="radioSlot${channelCount}" placeholder="e.g., Morning Show">
+
+                    <label for="radioSubject${channelCount}">Subject:</label>
+                    <input type="text" class="radioSubject" id="radioSubject${channelCount}" placeholder="e.g., Jewelry Ad">
+                </div>
+
+                <div class="eventsFields" style="display: none;">
+                    <label for="eventName${channelCount}">Event Name:</label>
+                    <input type="text" class="eventName" id="eventName${channelCount}" placeholder="e.g., Diwali Exhibition">
+
+                    <label for="eventDate${channelCount}">Event Date:</label>
+                    <input type="date" class="eventDate" id="eventDate${channelCount}">
+                </div>
+
+                <button type="button" onclick="removeChannel(this)">Remove Channel</button>
+            `;
+            document.getElementById('channelDetails').appendChild(channelDiv);
+            toggleChannelFields(document.getElementById(`channelType${channelCount}`));
+        }
+
+        function removeChannel(button) {
+            button.parentElement.remove();
+        }
+
+        function toggleChannelFields(select) {
+            const channelDiv = select.parentElement;
+            const type = select.value;
+            channelDiv.querySelector('.socialMediaFields').style.display = type === 'social_media' ? 'block' : 'none';
+            channelDiv.querySelector('.printMediaFields').style.display = type === 'print_media' ? 'block' : 'none';
+            channelDiv.querySelector('.tvFields').style.display = type === 'tv' ? 'block' : 'none';
+            channelDiv.querySelector('.radioFields').style.display = type === 'radio' ? 'block' : 'none';
+            channelDiv.querySelector('.eventsFields').style.display = type === 'events' ? 'block' : 'none';
+        }
+
+        async function submitCampaign() {
+            const campaign = {
+                campaignId: document.getElementById('campaignId').value,
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value,
+                startDate: new Date(document.getElementById('startDate').value),
+                endDate: new Date(document.getElementById('endDate').value),
+                budget: parseFloat(document.getElementById('budget').value),
+                status: document.getElementById('status').value,
+                targetAudience: {
+                    demographics: {
+                        age: document.getElementById('age').value,
+                        gender: document.getElementById('gender').value
+                    },
+                    location: document.getElementById('location').value
+                },
+                goals: {
+                    sales: parseFloat(document.getElementById('sales').value) || 0,
+                    impressions: parseInt(document.getElementById('impressions').value) || 0,
+                    conversions: parseInt(document.getElementById('conversions').value) || 0
+                },
+                channelDetails: []
+            };
+
+            const channelDivs = document.querySelectorAll('.channel-details');
+            channelDivs.forEach((div, index) => {
+                const channel = {
+                    type: div.querySelector('.channelType').value,
+                    name: div.querySelector('.channelName').value,
+                    cost: parseFloat(div.querySelector('.channelCost').value) || 0
+                };
+
+                if (channel.type === 'social_media') {
+                    channel.platform = div.querySelector('.platform').value;
+                    channel.adType = div.querySelector('.adType').value;
+                    channel.postType = div.querySelector('.postType').value;
+                } else if (channel.type === 'print_media') {
+                    channel.mediaType = div.querySelector('.mediaType').value;
+                    channel.publication = div.querySelector('.publication').value;
+                    channel.adSize = div.querySelector('.adSize').value;
+                    channel.publicationDate = new Date(div.querySelector('.publicationDate').value);
+                    channel.distributionArea = div.querySelector('.distributionArea').value;
+                    channel.quantity = parseInt(div.querySelector('.quantity').value) || 0;
+                } else if (channel.type === 'tv') {
+                    channel.station = div.querySelector('.station').value;
+                    channel.slot = div.querySelector('.slot').value;
+                    channel.distributionDate = new Date(div.querySelector('.distributionDate').value);
+                } else if (channel.type === 'radio') {
+                    channel.station = div.querySelector('.radioStation').value;
+                    channel.slot = div.querySelector('.radioSlot').value;
+                    channel.subject = div.querySelector('.radioSubject').value;
+                } else if (channel.type === 'events') {
+                    channel.eventName = div.querySelector('.eventName').value;
+                    channel.eventDate = new Date(div.querySelector('.eventDate').value);
+                }
+
+                campaign.channelDetails.push(channel);
+            });
+
+            try {
+                const response = await fetch('/api/campaigns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(campaign)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Campaign saved successfully!');
+                    document.querySelector('.form-section').reset();
+                    channelDivs.forEach((div, index) => {
+                        if (index > 0) div.remove();
+                    });
+                    document.getElementById('channelType1').dispatchEvent(new Event('change'));
+                } else {
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                alert('Error saving campaign: ' + error.message);
+            }
+        }
+
+        async function queryCampaigns() {
+            const query = {};
+            const campaignId = document.getElementById('queryCampaignId').value;
+            const status = document.getElementById('queryStatus').value;
+
+            if (campaignId) query.campaignId = campaignId;
+            if (status) query.status = status;
+
+            try {
+                const response = await fetch('/api/campaigns/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(query)
+                });
+                const campaigns = await response.json();
+                displayQueryResults(campaigns);
+            } catch (error) {
+                document.getElementById('queryResult').innerHTML = 'Error querying campaigns: ' + error.message;
+            }
+        }
+
+        function displayQueryResults(campaigns) {
+            const resultDiv = document.getElementById('queryResult');
+            if (campaigns.length === 0) {
+                resultDiv.innerHTML = 'No campaigns found.';
+                return;
+            }
+
+            let html = '<h3>Query Results</h3><table>';
+            html += '<tr><th>ID</th><th>Name</th><th>Status</th><th>Budget</th><th>Start Date</th><th>End Date</th><th>Channels</th></tr>';
+            campaigns.forEach(campaign => {
+                html += `<tr>
+                    <td>${campaign.campaignId}</td>
+                    <td>${campaign.name}</td>
+                    <td>${campaign.status}</td>
+                    <td>$${campaign.budget}</td>
+                    <td>${new Date(campaign.startDate).toLocaleDateString()}</td>
+                    <td>${new Date(campaign.endDate).toLocaleDateString()}</td>
+                    <td>${campaign.channelDetails.map(ch => ch.name).join(', ')}</td>
+                </tr>`;
+            });
+            html += '</table>';
+            resultDiv.innerHTML = html;
+        }
+
+        async function exportCampaigns() {
+            try {
+                const response = await fetch('/api/campaigns/export');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'campaigns.xlsx';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('Error exporting campaigns: ' + error.message);
+            }
+        }
+
+        // Initialize channel fields
+        document.getElementById('channelType1').addEventListener('change', function() {
+            toggleChannelFields(this);
+        });
+    </script>
+</body>
+</html>
