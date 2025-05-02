@@ -1,16 +1,18 @@
 {
-  "name": "trichygold-campaigns",
-  "version": "1.0.0",
-  "description": "Campaign management for Trichy Gold Jewellers",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "dotenv": "^16.5.0",
-    "express": "^4.17.1",
-    "mongodb": "^4.17.2",
-    "xlsx": "^0.18.5"
+    "name": "trichygold-campaigns",
+    "version": "1.0.0",
+    "description": "Campaign management app for Trichy Gold",
+    "main": "server.js",
+    "scripts": {
+      "start": "node server.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "mongodb": "^6.8.0",
+      "dotenv": "^16.4.5",
+      "exceljs": "^4.4.0",
+      "body-parser": "^1.20.2"
+    },
+    "author": "Shameem",
+    "license": "ISC"
   }
-}
