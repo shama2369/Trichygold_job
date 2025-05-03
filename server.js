@@ -50,9 +50,28 @@ async function setupDatabase() {
   }
 }
 
+// Generate Campaign ID
+async function generateCampaignId() {
+  try {
+    const campaigns = db.collection('campaigns');
+    const lastCampaign = await campaigns.find().sort({ campaignId: -1 }).limit(1).toArray();
+    let nextId = 1;
+    if (lastCampaign.length > 0) {
+      const lastId = lastCampaign[0].campaignId;
+      const number = parseInt(lastId.replace('CAMP_', '')) + 1;
+      nextId = number;
+    }
+    return `CAMP_${nextId.toString().padStart(4, '0')}`;
+  } catch (err) {
+    console.error('Error generating campaignId:', err);
+    throw err;
+  }
+}
+
 // Middleware
 app.use(bodyParser.json());
-app.use(express.static('.'));
+app.use(express.static('.')); // Serve index.html
+app.use('/public', express.static(path.join(__dirname, 'public'))); // Serve styles.css
 
 // Initialize database
 setupDatabase().catch(err => {
@@ -63,14 +82,20 @@ setupDatabase().catch(err => {
 // POST: Create or update campaign
 app.post('/api/campaigns', async (req, res) => {
   try {
-    const campaignData = req.body;
+    let campaignData = req.body;
+    
+    // Generate campaignId if not provided
+    if (!campaignData.campaignId) {
+      campaignData.campaignId = await generateCampaignId();
+    }
+    
     const campaigns = db.collection('campaigns');
     await campaigns.updateOne(
       { campaignId: campaignData.campaignId },
       { $set: campaignData },
       { upsert: true }
     );
-    res.status(200).json({ message: 'Campaign saved successfully' });
+    res.status(200).json({ message: 'Campaign saved successfully', campaignId: campaignData.campaignId });
   } catch (err) {
     console.error('Error saving campaign:', err);
     res.status(500).json({ error: 'Server error' });
@@ -109,11 +134,23 @@ app.get('/api/campaigns/export', async (req, res) => {
       { header: 'Description', key: 'description', width: 30 },
       { header: 'Start Date', key: 'startDate', width: 15 },
       { header: 'End Date', key: 'endDate', width: 15 },
-      { header: 'Budget', key: 'budget', width: 10 },
+      { header: 'Budget (AED)', key: 'budget', width: 10 },
       { header: 'Status', key: 'status', width: 10 },
+      { header: 'Channels', key: 'channels', width: 50 },
     ];
     
     data.forEach(campaign => {
+      const channelDetails = campaign.channels.map(channel => {
+        if (channel.type === 'Social Media') {
+          return `Social Media: ${channel.platform}, ${channel.adName}, ${channel.budget} AED, ${channel.adType}`;
+        } else if (channel.type === 'TV') {
+          return `TV: ${channel.network}, ${channel.adName}, ${channel.budget} AED, ${channel.slot}`;
+        } else if (channel.type === 'Print Media') {
+          return `Print Media: ${channel.publication}, ${channel.adName}, ${channel.budget} AED, ${channel.adSize}`;
+        }
+        return '';
+      }).join('; ');
+      
       worksheet.addRow({
         campaignId: campaign.campaignId,
         name: campaign.name,
@@ -122,6 +159,7 @@ app.get('/api/campaigns/export', async (req, res) => {
         endDate: campaign.endDate,
         budget: campaign.budget,
         status: campaign.status,
+        channels: channelDetails,
       });
     });
     
