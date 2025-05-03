@@ -5,6 +5,7 @@
     "main": "server.js",
     "scripts": {
       "start": "node server.js",
+      "start:prod": "node server.js",
       "build:css": "npx tailwindcss -i ./input.css -o ./public/styles.css --minify"
     },
     "dependencies": {

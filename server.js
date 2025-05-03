@@ -35,11 +35,6 @@ async function setupDatabase() {
       return;
     } catch (err) {
       console.error(`MongoDB connection failed (Attempt ${4 - retries}):`, err.message);
-      console.error('Error details:', {
-        name: err.name,
-        code: err.code,
-        sslError: err.sslError || 'None',
-      });
       retries -= 1;
       if (retries === 0) {
         console.error('All MongoDB connection retries failed');
@@ -73,10 +68,9 @@ app.use(bodyParser.json());
 app.use(express.static('.')); // Serve index.html
 app.use('/public', express.static(path.join(__dirname, 'public'))); // Serve styles.css
 
-// Initialize database
-setupDatabase().catch(err => {
-  console.error('Failed to set up database:', err);
-  process.exit(1);
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 // POST: Create or update campaign
@@ -173,7 +167,18 @@ app.get('/api/campaigns/export', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// Initialize database and start server
+async function startServer() {
+  try {
+    await setupDatabase();
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+      console.log('Application startup completed');
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+startServer();
