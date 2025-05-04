@@ -41,12 +41,13 @@
       background-color: #DC2626;
     }
     .btn-remove-light {
-      background-color: #FFF9C4;
+      background-color: #FFEB3B;
       color: #7C6F00;
       transition: background-color 0.3s;
+      border: 1px solid #FBC02D;
     }
     .btn-remove-light:hover {
-      background-color: #FFE082;
+      background-color: #FFF176;
     }
   </style>
 </head>
@@ -156,10 +157,8 @@
                   <option value="Print Media">Print Media</option>
                 </select>
               </div>
-              <div class="channelFields grid grid-cols-4 gap-2"></div>
-              <div class="flex items-end">
-                <button class="btn-remove-light py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
-              </div>
+              <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
+              <button class="btn-remove-light py-2 px-4 rounded-md w-full col-span-1" style="grid-column: 6;" onclick="removeChannelEntry(this)">Remove</button>
             </div>
           </div>
           <button class="btn-secondary mt-2 py-2 px-4 rounded-md" onclick="addChannelEntry()">Add Channel</button>
@@ -258,7 +257,7 @@
         `;
       }
       fieldsDiv.innerHTML = html;
-      fieldsDiv.className = type ? 'grid grid-cols-4 gap-2' : 'grid grid-cols-4 gap-2';
+      fieldsDiv.className = 'grid grid-cols-4 gap-2';
     }
 
     function addChannelEntry() {
@@ -275,10 +274,8 @@
             <option value="Print Media">Print Media</option>
           </select>
         </div>
-        <div class="channelFields grid grid-cols-4 gap-2"></div>
-        <div class="flex items-end">
-          <button class="btn-remove-light py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
-        </div>
+        <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
+        <button class="btn-remove-light py-2 px-4 rounded-md w-full col-span-1" style="grid-column: 6;" onclick="removeChannelEntry(this)">Remove</button>
       `;
       container.appendChild(entry);
     }
@@ -355,6 +352,7 @@
         if (response.ok) {
           document.getElementById('campaignId').value = result.campaignId;
           alert(result.message);
+          updateCampaignIdAfterSubmit();
         } else {
           alert('Error: ' + result.error);
         }
@@ -388,27 +386,34 @@
     // Fetch and display the next campaign ID on page load
     async function fetchNextCampaignId() {
       try {
-        // Try to get the next campaign ID from the backend by creating a dummy campaign and not saving it
-        // We'll use the same logic as the backend to generate the next ID
-        const response = await fetch('/api/campaigns/CAMP_DUMMY');
-        if (response.status === 404) {
-          // If not found, fetch all campaigns and determine the next ID
-          const exportResponse = await fetch('/api/campaigns/export');
-          if (exportResponse.ok) {
-            // Not ideal, but fallback if needed
-            document.getElementById('campaignId').placeholder = 'Auto-generated';
-          }
-        } else if (response.ok) {
-          const data = await response.json();
-          document.getElementById('campaignId').value = data.campaignId;
+        // Try to get the latest campaign and increment the ID
+        const response = await fetch('/api/campaigns');
+        if (response.ok) {
+          const campaigns = await response.json();
+          let maxId = 0;
+          campaigns.forEach(c => {
+            if (c.campaignId && c.campaignId.startsWith('CAMP_')) {
+              const num = parseInt(c.campaignId.replace('CAMP_', ''));
+              if (num > maxId) maxId = num;
+            }
+          });
+          const nextId = `CAMP_${(maxId + 1).toString().padStart(4, '0')}`;
+          document.getElementById('campaignId').value = nextId;
+        } else {
+          document.getElementById('campaignId').value = '';
         }
       } catch (err) {
-        document.getElementById('campaignId').placeholder = 'Auto-generated';
+        document.getElementById('campaignId').value = '';
       }
     }
 
     // Call fetchNextCampaignId on page load
     window.addEventListener('DOMContentLoaded', fetchNextCampaignId);
+
+    // Also fetch and update campaign ID after successful submission
+    async function updateCampaignIdAfterSubmit() {
+      await fetchNextCampaignId();
+    }
   </script>
 </body>
 </html>
