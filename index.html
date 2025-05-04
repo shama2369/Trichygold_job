@@ -40,6 +40,14 @@
     .btn-remove:hover {
       background-color: #DC2626;
     }
+    .btn-remove-light {
+      background-color: #FFF9C4;
+      color: #7C6F00;
+      transition: background-color 0.3s;
+    }
+    .btn-remove-light:hover {
+      background-color: #FFE082;
+    }
   </style>
 </head>
 <body class="flex items-center justify-center p-4">
@@ -54,7 +62,7 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label for="campaignId" class="block text-sm font-medium text-purple-700">Campaign ID</label>
-            <input id="campaignId" type="text" readonly placeholder="Auto-generated (e.g., CAMP_0001)" class="w-full p-2 border rounded-md bg-gray-100 focus:outline-none">
+            <input id="campaignId" type="text" readonly class="w-full p-2 border rounded-md bg-gray-100 focus:outline-none">
           </div>
           <div>
             <label for="name" class="block text-sm font-medium text-purple-700">Campaign Name</label>
@@ -138,7 +146,7 @@
         <div class="border-t pt-4">
           <h3 class="text-md font-medium text-purple-600 mb-2">Channels</h3>
           <div id="channelContainer" class="space-y-4">
-            <div class="channelEntry grid grid-cols-5 gap-2">
+            <div class="channelEntry grid grid-cols-5 gap-2 items-end">
               <div>
                 <label class="block text-sm font-medium text-purple-700">Channel Type</label>
                 <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
@@ -148,9 +156,9 @@
                   <option value="Print Media">Print Media</option>
                 </select>
               </div>
-              <div class="channelFields"></div>
+              <div class="channelFields grid grid-cols-4 gap-2"></div>
               <div class="flex items-end">
-                <button class="btn-secondary py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
+                <button class="btn-remove-light py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
               </div>
             </div>
           </div>
@@ -250,13 +258,13 @@
         `;
       }
       fieldsDiv.innerHTML = html;
-      fieldsDiv.className = type ? 'grid grid-cols-4 gap-2' : '';
+      fieldsDiv.className = type ? 'grid grid-cols-4 gap-2' : 'grid grid-cols-4 gap-2';
     }
 
     function addChannelEntry() {
       const container = document.getElementById('channelContainer');
       const entry = document.createElement('div');
-      entry.className = 'channelEntry grid grid-cols-5 gap-2';
+      entry.className = 'channelEntry grid grid-cols-5 gap-2 items-end';
       entry.innerHTML = `
         <div>
           <label class="block text-sm font-medium text-purple-700">Channel Type</label>
@@ -267,9 +275,9 @@
             <option value="Print Media">Print Media</option>
           </select>
         </div>
-        <div class="channelFields"></div>
+        <div class="channelFields grid grid-cols-4 gap-2"></div>
         <div class="flex items-end">
-          <button class="btn-secondary py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
+          <button class="btn-remove-light py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
         </div>
       `;
       container.appendChild(entry);
