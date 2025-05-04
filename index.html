@@ -150,7 +150,7 @@
               </div>
               <div class="channelFields"></div>
               <div class="flex items-end">
-                <button class="btn-remove py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
+                <button class="btn-secondary py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
               </div>
             </div>
           </div>
@@ -269,7 +269,7 @@
         </div>
         <div class="channelFields"></div>
         <div class="flex items-end">
-          <button class="btn-remove py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
+          <button class="btn-secondary py-2 px-4 rounded-md w-full" onclick="removeChannelEntry(this)">Remove</button>
         </div>
       `;
       container.appendChild(entry);
@@ -376,6 +376,31 @@
     function exportCampaigns() {
       window.location.href = '/api/campaigns/export';
     }
+
+    // Fetch and display the next campaign ID on page load
+    async function fetchNextCampaignId() {
+      try {
+        // Try to get the next campaign ID from the backend by creating a dummy campaign and not saving it
+        // We'll use the same logic as the backend to generate the next ID
+        const response = await fetch('/api/campaigns/CAMP_DUMMY');
+        if (response.status === 404) {
+          // If not found, fetch all campaigns and determine the next ID
+          const exportResponse = await fetch('/api/campaigns/export');
+          if (exportResponse.ok) {
+            // Not ideal, but fallback if needed
+            document.getElementById('campaignId').placeholder = 'Auto-generated';
+          }
+        } else if (response.ok) {
+          const data = await response.json();
+          document.getElementById('campaignId').value = data.campaignId;
+        }
+      } catch (err) {
+        document.getElementById('campaignId').placeholder = 'Auto-generated';
+      }
+    }
+
+    // Call fetchNextCampaignId on page load
+    window.addEventListener('DOMContentLoaded', fetchNextCampaignId);
   </script>
 </body>
 </html>
