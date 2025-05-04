@@ -45,6 +45,10 @@
       color: #7C6F00;
       transition: background-color 0.3s;
       border: 1px solid #FBC02D;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      width: 100%;
     }
     .btn-remove-light:hover {
       background-color: #FFF176;
@@ -147,8 +151,8 @@
         <div class="border-t pt-4">
           <h3 class="text-md font-medium text-purple-600 mb-2">Channels</h3>
           <div id="channelContainer" class="space-y-4">
-            <div class="channelEntry grid grid-cols-5 gap-2 items-end">
-              <div>
+            <div class="channelEntry grid grid-cols-6 gap-2 items-end">
+              <div class="col-span-1">
                 <label class="block text-sm font-medium text-purple-700">Channel Type</label>
                 <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
                   <option value="">Select Channel</option>
@@ -158,7 +162,7 @@
                 </select>
               </div>
               <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
-              <button class="btn-remove-light py-2 px-4 rounded-md w-full col-span-1" style="grid-column: 6;" onclick="removeChannelEntry(this)">Remove</button>
+              <button class="btn-remove-light w-full col-span-1 flex justify-center items-center" onclick="removeChannelEntry(this)">Remove</button>
             </div>
           </div>
           <button class="btn-secondary mt-2 py-2 px-4 rounded-md" onclick="addChannelEntry()">Add Channel</button>
@@ -263,9 +267,9 @@
     function addChannelEntry() {
       const container = document.getElementById('channelContainer');
       const entry = document.createElement('div');
-      entry.className = 'channelEntry grid grid-cols-5 gap-2 items-end';
+      entry.className = 'channelEntry grid grid-cols-6 gap-2 items-end';
       entry.innerHTML = `
-        <div>
+        <div class="col-span-1">
           <label class="block text-sm font-medium text-purple-700">Channel Type</label>
           <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
             <option value="">Select Channel</option>
@@ -275,7 +279,7 @@
           </select>
         </div>
         <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
-        <button class="btn-remove-light py-2 px-4 rounded-md w-full col-span-1" style="grid-column: 6;" onclick="removeChannelEntry(this)">Remove</button>
+        <button class="btn-remove-light w-full col-span-1 flex justify-center items-center" onclick="removeChannelEntry(this)">Remove</button>
       `;
       container.appendChild(entry);
     }
