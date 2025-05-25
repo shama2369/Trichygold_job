@@ -1,531 +1,184 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trichy Gold Campaigns</title>
-  <link rel="stylesheet" href="/public/styles.css">
-  <style>
-    body {
-      background: linear-gradient(135deg, #6B46C1, #9F7AEA);
-      min-height: 100vh;
-      font-family: 'Arial', sans-serif;
+const express = require('express');
+const { MongoClient } = require('mongodb');
+const dotenv = require('dotenv');
+const excel = require('exceljs');
+const bodyParser = require('body-parser');
+const path = require('path');
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3000;
+const uri = process.env.MONGO_URI;
+
+let db;
+
+async function setupDatabase() {
+  const client = new MongoClient(uri, {
+    ssl: true,
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+    tlsAllowInvalidCertificates: false,
+    tlsAllowInvalidHostnames: false,
+  });
+
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      console.log(`Attempting to connect to MongoDB (Retries left: ${retries})...`);
+      await client.connect();
+      console.log('Connected to MongoDB');
+      db = client.db('event_campaign_db');
+      const campaigns = db.collection('campaigns');
+      await campaigns.createIndex({ campaignId: 1 }, { unique: true });
+      console.log('Unique index on campaignId created');
+      return;
+    } catch (err) {
+      console.error(`MongoDB connection failed (Attempt ${4 - retries}):`, err.message);
+      retries -= 1;
+      if (retries === 0) {
+        console.error('All MongoDB connection retries failed');
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
-    .card {
-      background: white;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Generate Campaign ID
+async function generateCampaignId() {
+  try {
+    const campaigns = db.collection('campaigns');
+    const lastCampaign = await campaigns.find().sort({ campaignId: -1 }).limit(1).toArray();
+    let nextId = 1;
+    if (lastCampaign.length > 0) {
+      const lastId = lastCampaign[0].campaignId;
+      const number = parseInt(lastId.replace('CAMP_', '')) + 1;
+      nextId = number;
     }
-    .btn-primary {
-      background-color: #6B46C1;
-      color: white;
-      transition: background-color 0.3s;
-    }
-    .btn-primary:hover {
-      background-color: #553C9A;
-    }
-    .btn-secondary {
-      background-color: #9F7AEA;
-      color: white;
-      transition: background-color 0.3s;
-    }
-    .btn-secondary:hover {
-      background-color: #805AD5;
-    }
-    .btn-remove {
-      background-color: #EF4444;
-      color: white;
-      transition: background-color 0.3s;
-    }
-    .btn-remove:hover {
-      background-color: #DC2626;
-    }
-    .btn-remove-light {
-      background-color: #FFEB3B;
-      color: #7C6F00;
-      transition: background-color 0.3s;
-      border: 1px solid #FBC02D;
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-      width: 100%;
-    }
-    .btn-remove-light:hover {
-      background-color: #FFF176;
-    }
-  </style>
-</head>
-<body class="flex items-center justify-center p-4">
-  <div class="card w-full max-w-4xl p-6">
-    <h1 class="text-2xl font-bold text-center text-purple-700 mb-6">Trichy Gold Campaign Manager</h1>
+    return `CAMP_${nextId.toString().padStart(4, '0')}`;
+  } catch (err) {
+    console.error('Error generating campaignId:', err);
+    throw err;
+  }
+}
+
+// Middleware
+app.use(bodyParser.json());
+app.use(express.static('.')); // Serve index.html
+app.use('/public', express.static(path.join(__dirname, 'public'))); // Serve styles.css
+
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// POST: Create or update campaign
+app.post('/api/campaigns', async (req, res) => {
+  try {
+    let campaignData = req.body;
     
-    <!-- Campaign Form -->
-    <div class="mb-6">
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Create/Update Campaign</h2>
-      <div class="space-y-6">
-        <!-- Campaign ID and Name -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="campaignId" class="block text-sm font-medium text-purple-700">Campaign ID</label>
-            <input id="campaignId" type="text" readonly class="w-full p-2 border rounded-md bg-gray-100 focus:outline-none">
-          </div>
-          <div>
-            <label for="name" class="block text-sm font-medium text-purple-700">Campaign Name</label>
-            <input id="name" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-        </div>
-        
-        <!-- Description -->
-        <div>
-          <label for="description" class="block text-sm font-medium text-purple-700">Description</label>
-          <input id="description" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-        
-        <!-- Start Date and End Date -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="startDate" class="block text-sm font-medium text-purple-700">Start Date</label>
-            <input id="startDate" type="date" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-          <div>
-            <label for="endDate" class="block text-sm font-medium text-purple-700">End Date</label>
-            <input id="endDate" type="date" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-        </div>
-        
-        <!-- Budget and Status -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="budget" class="block text-sm font-medium text-purple-700">Budget (AED)</label>
-            <input id="budget" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-          <div>
-            <label for="status" class="block text-sm font-medium text-purple-700">Status</label>
-            <select id="status" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Planned">Planned</option>
-            </select>
-          </div>
-        </div>
-        
-        <!-- Target Audience -->
-        <div class="border-t pt-4">
-          <h3 class="text-md font-medium text-purple-600 mb-2">Target Audience</h3>
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label for="targetAge" class="block text-sm font-medium text-purple-700">Age</label>
-              <input id="targetAge" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-            <div>
-              <label for="targetGender" class="block text-sm font-medium text-purple-700">Gender</label>
-              <select id="targetGender" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="All">All</option>
-              </select>
-            </div>
-            <div>
-              <label for="targetLocation" class="block text-sm font-medium text-purple-700">Location</label>
-              <input id="targetLocation" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-          </div>
-        </div>
-        
-        <!-- Goals -->
-        <div class="border-t pt-4">
-          <h3 class="text-md font-medium text-purple-600 mb-2">Goals</h3>
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label for="goalSales" class="block text-sm font-medium text-purple-700">Sales (AED)</label>
-              <input id="goalSales" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-            <div>
-              <label for="goalImpressions" class="block text-sm font-medium text-purple-700">Impressions</label>
-              <input id="goalImpressions" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-            <div>
-              <label for="goalConversions" class="block text-sm font-medium text-purple-700">Conversions</label>
-              <input id="goalConversions" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-          </div>
-        </div>
-        
-        <!-- Channels -->
-        <div class="border-t pt-4">
-          <h3 class="text-md font-medium text-purple-600 mb-2">Channels</h3>
-          <div id="channelContainer" class="space-y-4">
-            <div class="channelEntry grid grid-cols-6 gap-2 items-end">
-              <div class="col-span-1">
-                <label class="block text-sm font-medium text-purple-700">Channel Type</label>
-                <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
-                  <option value="">Select Channel</option>
-                  <option value="Social Media">Social Media</option>
-                  <option value="Print Media">Print Media</option>
-                  <option value="Email">Email</option>
-                  <option value="Message">Message</option>
-                  <option value="Radio">Radio</option>
-                  <option value="TV">TV</option>
-                </select>
-              </div>
-              <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
-            </div>
-          </div>
-          <button class="btn-secondary mt-2 py-2 px-4 rounded-md" onclick="addChannelEntry()">Add Channel</button>
-        </div>
-        
-        <button onclick="submitCampaign()" class="btn-primary w-full py-2 rounded-md">Submit Campaign</button>
-      </div>
-    </div>
+    // Generate campaignId if not provided
+    if (!campaignData.campaignId) {
+      campaignData.campaignId = await generateCampaignId();
+    }
     
-    <!-- Query Campaign -->
-    <div class="mb-6">
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Query Campaign</h2>
-      <div class="flex space-x-2">
-        <input id="queryCampaignId" type="text" class="flex-grow p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-        <button onclick="queryCampaign()" class="btn-secondary py-2 px-4 rounded-md">Query</button>
-      </div>
-      <pre id="queryResult" class="mt-4 p-4 bg-gray-100 rounded-md hidden"></pre>
-    </div>
+    const campaigns = db.collection('campaigns');
+    await campaigns.updateOne(
+      { campaignId: campaignData.campaignId },
+      { $set: campaignData },
+      { upsert: true }
+    );
+    res.status(200).json({ message: 'Campaign saved successfully', campaignId: campaignData.campaignId });
+  } catch (err) {
+    console.error('Error saving campaign:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET: Query campaigns by campaignId
+app.get('/api/campaigns/:campaignId', async (req, res) => {
+  try {
+    const campaignId = req.params.campaignId;
+    const campaigns = db.collection('campaigns');
+    const campaign = await campaigns.findOne({ campaignId });
+    if (campaign) {
+      res.status(200).json(campaign);
+    } else {
+      res.status(404).json({ error: 'Campaign not found' });
+    }
+  } catch (err) {
+    console.error('Error querying campaign:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET: Export all campaigns to Excel
+app.get('/api/campaigns/export', async (req, res) => {
+  try {
+    const campaigns = db.collection('campaigns');
+    const data = await campaigns.find().toArray();
     
-    <!-- Export Campaigns -->
-    <div>
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Export Campaigns</h2>
-      <button onclick="exportCampaigns()" class="btn-primary w-full py-2 rounded-md">Download Excel</button>
-    </div>
-  </div>
-
-  <script>
-    function updateChannelFields(select) {
-      const entry = select.closest('.channelEntry');
-      const fieldsDiv = entry.querySelector('.channelFields');
-      const type = select.value;
-
-      // Clear existing fields
-      fieldsDiv.innerHTML = '';
-
-      let html = '';
-      if (type === 'Print Media') {
-        html = `
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Platform</label>
-            <select class="channelPlatform p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-              <option value="">Select Platform</option>
-              <option value="Newspaper">Newspaper</option>
-              <option value="Magazine">Magazine</option>
-              <option value="Flyers">Flyers</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Publication</label>
-            <input type="text" class="channelPublication p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Ad Name</label>
-            <input type="text" class="channelAdName p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Cost (AED)</label>
-            <input type="number" class="channelCost p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Start Date</label>
-            <input type="date" class="channelStartDate p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">End Date</label>
-            <input type="date" class="channelEndDate p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Area</label>
-            <input type="text" class="channelArea p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Qty</label>
-            <input type="number" class="channelQty p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-        `;
-      } else if (type === 'Social Media') {
-        html = `
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Platform</label>
-            <select class="channelPlatform p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-              <option value="">Select Platform</option>
-              <option value="Google">Google</option>
-              <option value="Facebook">Facebook</option>
-              <option value="Instagram">Instagram</option>
-              <option value="Twitter">Twitter</option>
-              <option value="Tik Tok">Tik Tok</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Ad Name</label>
-            <input type="text" class="channelAdName p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Cost (AED)</label>
-            <input type="number" class="channelCost p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Ad Type</label>
-            <select class="channelAdType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-              <option value="Boost Reel">Boost Reel</option>
-              <option value="Boost Post">Boost Post</option>
-              <option value="Forms">Forms</option>
-              <option value="Search">Search</option>
-            </select>
-          </div>
-        `;
-      } else if (type === 'TV') {
-        html = `
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Network</label>
-            <input type="text" class="channelNetwork p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Ad Name</label>
-            <input type="text" class="channelAdName p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Cost (AED)</label>
-            <input type="number" class="channelCost p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Start Date</label>
-            <input type="date" class="channelStartDate p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">End Date</label>
-            <input type="date" class="channelEndDate p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-        `;
-      } else if (type === 'Email' || type === 'Message') {
-        html = `
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Ad Name</label>
-            <input type="text" class="channelAdName p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Cost (AED)</label>
-            <input type="number" class="channelCost p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Qty</label>
-            <input type="number" class="channelQty p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-        `;
-      } else if (type === 'Radio') {
-        html = `
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Station</label>
-            <input type="text" class="channelStation p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Ad Name</label>
-            <input type="text" class="channelAdName p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Cost (AED)</label>
-            <input type="number" class="channelCost p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">Start Date</label>
-            <input type="date" class="channelStartDate p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-purple-700">End Date</label>
-            <input type="date" class="channelEndDate p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-          </div>
-        `;
-      }
-
-      // Insert new fields
-      fieldsDiv.innerHTML = html;
-
-      // Remove any existing Remove button
-      const existingRemove = entry.querySelector('.btn-remove-light');
-      if (existingRemove) existingRemove.remove();
-
-      // Add Remove button if a channel type is selected
-      if (type) {
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'btn-remove-light';
-        removeBtn.type = 'button';
-        removeBtn.style = 'grid-column: 3 / span 1; justify-self: center; min-width: 150px; padding: 0.5rem 1.5rem; font-size: 1rem; border-radius: 0.375rem;';
-        removeBtn.textContent = 'Remove';
-        removeBtn.onclick = function() { removeChannelEntry(removeBtn); };
-        entry.appendChild(removeBtn);
-      }
-    }
-
-    function addChannelEntry() {
-      const container = document.getElementById('channelContainer');
-      const entry = document.createElement('div');
-      entry.className = 'channelEntry grid grid-cols-6 gap-2 items-end';
-      entry.innerHTML = `
-        <div class="col-span-1">
-          <label class="block text-sm font-medium text-purple-700">Channel Type</label>
-          <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
-            <option value="">Select Channel</option>
-            <option value="Social Media">Social Media</option>
-            <option value="Print Media">Print Media</option>
-            <option value="Email">Email</option>
-            <option value="Message">Message</option>
-            <option value="Radio">Radio</option>
-            <option value="TV">TV</option>
-          </select>
-        </div>
-        <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
-      `;
-      container.appendChild(entry);
-    }
-
-    function removeChannelEntry(button) {
-      const entry = button.closest('.channelEntry');
-      if (entry) entry.remove();
-      // If no channel entries left, add a new one
-      const container = document.getElementById('channelContainer');
-      if (container.children.length === 0) {
-        addChannelEntry();
-      }
-    }
-
-    async function submitCampaign() {
-      const channelEntries = document.querySelectorAll('.channelEntry');
-      const channels = Array.from(channelEntries).map(entry => {
-        const type = entry.querySelector('.channelType').value;
-        if (type === 'Social Media') {
-          return {
-            type,
-            platform: entry.querySelector('.channelPlatform').value,
-            adName: entry.querySelector('.channelAdName').value,
-            cost: parseFloat(entry.querySelector('.channelCost').value) || 0,
-            adType: entry.querySelector('.channelAdType').value,
-          };
-        } else if (type === 'TV' || type === 'Radio') {
-          return {
-            type,
-            network: entry.querySelector('.channelNetwork')?.value,
-            adName: entry.querySelector('.channelAdName').value,
-            cost: parseFloat(entry.querySelector('.channelCost').value) || 0,
-            startDate: entry.querySelector('.channelStartDate')?.value,
-            endDate: entry.querySelector('.channelEndDate')?.value,
-          };
-        } else if (type === 'Print Media') {
-          return {
-            type,
-            platform: entry.querySelector('.channelPlatform').value,
-            publication: entry.querySelector('.channelPublication').value,
-            adName: entry.querySelector('.channelAdName').value,
-            cost: parseFloat(entry.querySelector('.channelCost').value) || 0,
-            startDate: entry.querySelector('.channelStartDate').value,
-            endDate: entry.querySelector('.channelEndDate').value,
-            area: entry.querySelector('.channelArea').value,
-            qty: parseInt(entry.querySelector('.channelQty').value) || 0,
-          };
-        } else if (type === 'Email' || type === 'Message') {
-          return {
-            type,
-            adName: entry.querySelector('.channelAdName').value,
-            cost: parseFloat(entry.querySelector('.channelCost').value) || 0,
-            qty: parseInt(entry.querySelector('.channelQty').value) || 0,
-          };
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Campaigns');
+    
+    worksheet.columns = [
+      { header: 'Campaign ID', key: 'campaignId', width: 15 },
+      { header: 'Name', key: 'name', width: 20 },
+      { header: 'Description', key: 'description', width: 30 },
+      { header: 'Start Date', key: 'startDate', width: 15 },
+      { header: 'End Date', key: 'endDate', width: 15 },
+      { header: 'Budget (AED)', key: 'budget', width: 10 },
+      { header: 'Status', key: 'status', width: 10 },
+      { header: 'Channels', key: 'channels', width: 50 },
+    ];
+    
+    data.forEach(campaign => {
+      const channelDetails = campaign.channels.map(channel => {
+        if (channel.type === 'Social Media') {
+          return `Social Media: ${channel.platform}, ${channel.adName}, ${channel.budget} AED, ${channel.adType}`;
+        } else if (channel.type === 'TV') {
+          return `TV: ${channel.network}, ${channel.adName}, ${channel.budget} AED, ${channel.slot}`;
+        } else if (channel.type === 'Print Media') {
+          return `Print Media: ${channel.publication}, ${channel.adName}, ${channel.budget} AED, ${channel.adSize}`;
         }
-        return null;
-      }).filter(channel => channel);
+        return '';
+      }).join('; ');
+      
+      worksheet.addRow({
+        campaignId: campaign.campaignId,
+        name: campaign.name,
+        description: campaign.description,
+        startDate: campaign.startDate,
+        endDate: campaign.endDate,
+        budget: campaign.budget,
+        status: campaign.status,
+        channels: channelDetails,
+      });
+    });
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=campaigns.xlsx');
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Error exporting campaigns:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
-      const campaignData = {
-        campaignId: document.getElementById('campaignId').value,
-        name: document.getElementById('name').value,
-        description: document.getElementById('description').value,
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        budget: parseFloat(document.getElementById('budget').value) || 0,
-        status: document.getElementById('status').value,
-        targetAudience: {
-          age: document.getElementById('targetAge').value,
-          gender: document.getElementById('targetGender').value,
-          location: document.getElementById('targetLocation').value,
-        },
-        goals: {
-          sales: parseFloat(document.getElementById('goalSales').value) || 0,
-          impressions: parseFloat(document.getElementById('goalImpressions').value) || 0,
-          conversions: parseFloat(document.getElementById('goalConversions').value) || 0,
-        },
-        channels,
-      };
+// Initialize database and start server
+async function startServer() {
+  try {
+    await setupDatabase();
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+      console.log('Application startup completed');
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
 
-      try {
-        const response = await fetch('/api/campaigns', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(campaignData),
-        });
-        const result = await response.json();
-        if (response.ok) {
-          document.getElementById('campaignId').value = result.campaignId;
-          alert(result.message);
-          updateCampaignIdAfterSubmit();
-        } else {
-          alert('Error: ' + result.error);
-        }
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    }
-
-    async function queryCampaign() {
-      const campaignId = document.getElementById('queryCampaignId').value;
-      try {
-        const response = await fetch(`/api/campaigns/${campaignId}`);
-        const result = await response.json();
-        const queryResult = document.getElementById('queryResult');
-        if (response.ok) {
-          queryResult.textContent = JSON.stringify(result, null, 2);
-          queryResult.classList.remove('hidden');
-        } else {
-          queryResult.textContent = result.error;
-          queryResult.classList.remove('hidden');
-        }
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    }
-
-    function exportCampaigns() {
-      window.location.href = '/api/campaigns/export';
-    }
-
-    // Fetch and display the next campaign ID on page load
-    async function fetchNextCampaignId() {
-      try {
-        const response = await fetch('/api/campaigns');
-        if (response.ok) {
-          const campaigns = await response.json();
-          let maxId = 0;
-          campaigns.forEach(c => {
-            if (c.campaignId && c.campaignId.startsWith('CAMP_')) {
-              const num = parseInt(c.campaignId.replace('CAMP_', ''));
-              if (num > maxId) maxId = num;
-            }
-          });
-          const nextId = `CAMP_${(maxId + 1).toString().padStart(4, '0')}`;
-          document.getElementById('campaignId').value = nextId;
-        } else {
-          document.getElementById('campaignId').value = '';
-        }
-      } catch (err) {
-        document.getElementById('campaignId').value = '';
-      }
-    }
-
-    // Call fetchNextCampaignId on page load
-    window.addEventListener('DOMContentLoaded', fetchNextCampaignId);
-
-    // Also fetch and update campaign ID after successful submission
-    async function updateCampaignIdAfterSubmit() {
-      await fetchNextCampaignId();
-    }
-  </script>
-</body>
-</html> 
+startServer();
