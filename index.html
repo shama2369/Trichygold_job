@@ -480,11 +480,145 @@
         const response = await fetch(`/api/campaigns/${campaignId}`);
         const result = await response.json();
         const queryResult = document.getElementById('queryResult');
+        
         if (response.ok) {
-          queryResult.textContent = JSON.stringify(result, null, 2);
+          // Format the result in a more user-friendly way
+          let formattedResult = `<div class="p-4 bg-white rounded-md shadow-md">
+            <h3 class="text-xl font-bold text-purple-700 mb-3">${result.name || 'Unnamed Campaign'}</h3>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Campaign ID</p>
+                <p class="font-semibold">${result.campaignId || 'N/A'}</p>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-600">Status</p>
+                <p class="font-semibold">${result.status || 'N/A'}</p>
+              </div>
+            </div>
+            <div class="mb-4">
+              <p class="text-sm font-medium text-gray-600">Description</p>
+              <p>${result.description || 'No description provided'}</p>
+            </div>
+            <div class="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Start Date</p>
+                <p>${result.startDate || 'N/A'}</p>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-600">End Date</p>
+                <p>${result.endDate || 'N/A'}</p>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-600">Budget</p>
+                <p>${result.budget ? result.budget + ' AED' : 'N/A'}</p>
+              </div>
+            </div>`;
+          
+          // Target Audience section
+          if (result.targetAudience) {
+            formattedResult += `<div class="mb-4">
+              <p class="text-sm font-medium text-gray-600 mb-2">Target Audience</p>
+              <div class="grid grid-cols-3 gap-4 pl-4">
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Age</p>
+                  <p>${result.targetAudience.age || 'N/A'}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Gender</p>
+                  <p>${result.targetAudience.gender || 'N/A'}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Location</p>
+                  <p>${result.targetAudience.location || 'N/A'}</p>
+                </div>
+              </div>
+            </div>`;
+          }
+          
+          // Goals section
+          if (result.goals) {
+            formattedResult += `<div class="mb-4">
+              <p class="text-sm font-medium text-gray-600 mb-2">Goals</p>
+              <div class="grid grid-cols-3 gap-4 pl-4">
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Sales</p>
+                  <p>${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Impressions</p>
+                  <p>${result.goals.impressions || 'N/A'}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Conversions</p>
+                  <p>${result.goals.conversions || 'N/A'}</p>
+                </div>
+              </div>
+            </div>`;
+          }
+          
+          // Channels section
+          if (result.channels && result.channels.length > 0) {
+            formattedResult += `<div class="mb-4">
+              <p class="text-sm font-medium text-gray-600 mb-2">Channels</p>
+              <div class="space-y-3 pl-4">`;
+              
+            result.channels.forEach(channel => {
+              formattedResult += `<div class="p-2 bg-purple-50 rounded-md">
+                <p class="font-medium text-purple-700">${channel.type}</p>
+                <div class="grid grid-cols-2 gap-2 mt-1">`;
+                
+              // Add channel-specific details based on type
+              if (channel.type === 'Social Media') {
+                formattedResult += `
+                  <div>
+                    <p class="text-xs font-medium text-gray-500">Platform</p>
+                    <p>${channel.platform || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-gray-500">Ad Type</p>
+                    <p>${channel.adType || 'N/A'}</p>
+                  </div>`;
+              } else if (channel.type === 'Print Media') {
+                formattedResult += `
+                  <div>
+                    <p class="text-xs font-medium text-gray-500">Platform</p>
+                    <p>${channel.platform || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs font-medium text-gray-500">Publication</p>
+                    <p>${channel.publication || 'N/A'}</p>
+                  </div>`;
+              } else if (channel.type === 'TV' || channel.type === 'Radio') {
+                formattedResult += `
+                  <div>
+                    <p class="text-xs font-medium text-gray-500">${channel.type === 'TV' ? 'Network' : 'Station'}</p>
+                    <p>${channel.network || channel.station || 'N/A'}</p>
+                  </div>`;
+              }
+              
+              // Common fields for all channel types
+              formattedResult += `
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Ad Name</p>
+                  <p>${channel.adName || 'N/A'}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Cost</p>
+                  <p>${channel.cost ? channel.cost + ' AED' : 'N/A'}</p>
+                </div>`;
+                
+              formattedResult += `</div></div>`;
+            });
+            
+            formattedResult += `</div></div>`;
+          }
+          
+          formattedResult += `</div>`;
+          
+          queryResult.innerHTML = formattedResult;
           queryResult.classList.remove('hidden');
         } else {
-          queryResult.textContent = result.error;
+          queryResult.innerHTML = `<div class="p-4 bg-red-50 text-red-700 rounded-md">${result.error}</div>`;
           queryResult.classList.remove('hidden');
         }
       } catch (err) {
