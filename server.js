@@ -96,23 +96,6 @@ app.post('/api/campaigns', async (req, res) => {
   }
 });
 
-// GET: Query campaigns by campaignId
-app.get('/api/campaigns/:campaignId', async (req, res) => {
-  try {
-    const campaignId = req.params.campaignId;
-    const campaigns = db.collection('campaigns');
-    const campaign = await campaigns.findOne({ campaignId });
-    if (campaign) {
-      res.status(200).json(campaign);
-    } else {
-      res.status(404).json({ error: 'Campaign not found' });
-    }
-  } catch (err) {
-    console.error('Error querying campaign:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // GET: Export all campaigns to Excel
 app.get('/api/campaigns/export', async (req, res) => {
   try {
@@ -134,16 +117,18 @@ app.get('/api/campaigns/export', async (req, res) => {
     ];
     
     data.forEach(campaign => {
-      const channelDetails = campaign.channels.map(channel => {
+      const channelDetails = campaign.channels ? campaign.channels.map(channel => {
         if (channel.type === 'Social Media') {
-          return `Social Media: ${channel.platform}, ${channel.adName}, ${channel.budget} AED, ${channel.adType}`;
+          return `Social Media: ${channel.platform}, ${channel.adName}, ${channel.cost} AED, ${channel.adType}`;
         } else if (channel.type === 'TV') {
-          return `TV: ${channel.network}, ${channel.adName}, ${channel.budget} AED, ${channel.slot}`;
+          return `TV: ${channel.network || ''}, ${channel.adName}, ${channel.cost} AED`;
         } else if (channel.type === 'Print Media') {
-          return `Print Media: ${channel.publication}, ${channel.adName}, ${channel.budget} AED, ${channel.adSize}`;
+          return `Print Media: ${channel.publication}, ${channel.adName}, ${channel.cost} AED`;
+        } else if (channel.type === 'Radio') {
+          return `Radio: ${channel.station || ''}, ${channel.adName}, ${channel.cost} AED`;
         }
         return '';
-      }).join('; ');
+      }).join('; ') : '';
       
       worksheet.addRow({
         campaignId: campaign.campaignId,
@@ -163,6 +148,35 @@ app.get('/api/campaigns/export', async (req, res) => {
     res.end();
   } catch (err) {
     console.error('Error exporting campaigns:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET: Retrieve all campaigns
+app.get('/api/campaigns', async (req, res) => {
+  try {
+    const campaigns = db.collection('campaigns');
+    const allCampaigns = await campaigns.find().toArray();
+    res.status(200).json(allCampaigns);
+  } catch (err) {
+    console.error('Error retrieving campaigns:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET: Query campaigns by campaignId
+app.get('/api/campaigns/:campaignId', async (req, res) => {
+  try {
+    const campaignId = req.params.campaignId;
+    const campaigns = db.collection('campaigns');
+    const campaign = await campaigns.findOne({ campaignId });
+    if (campaign) {
+      res.status(200).json(campaign);
+    } else {
+      res.status(404).json({ error: 'Campaign not found' });
+    }
+  } catch (err) {
+    console.error('Error querying campaign:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
