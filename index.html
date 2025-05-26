@@ -483,8 +483,8 @@
         
         if (response.ok) {
           // Format the result in a more user-friendly way
-          let formattedResult = `<div class="p-3 bg-gray-50 rounded-md shadow-md border border-purple-100">
-            <div class="mb-3">
+          let formattedResult = `<div class="p-3 bg-white rounded-md shadow-md border border-purple-100">
+            <div class="mb-2">
               <div class="flex justify-between mb-2">
                 <div><span class="text-purple-600 font-medium">Campaign ID:</span> <span class="font-semibold">${result.campaignId || 'N/A'}</span></div>
                 <div><span class="text-purple-600 font-medium">Status:</span> <span class="font-semibold">${result.status || 'N/A'}</span></div>
@@ -498,8 +498,8 @@
             </div>
             
             ${result.targetAudience ? `
-            <div class="mb-3">
-              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-2">Target Audience</h4>
+            <div class="mb-2">
+              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-1">Target Audience</h4>
               <div class="flex justify-between">
                 <div><span class="text-purple-600 font-medium">Age:</span> ${result.targetAudience.age || 'N/A'}</div>
                 <div><span class="text-purple-600 font-medium">Gender:</span> ${result.targetAudience.gender || 'N/A'}</div>
@@ -508,8 +508,8 @@
             </div>` : ''}
             
             ${result.goals ? `
-            <div class="mb-3">
-              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-2">Goals</h4>
+            <div class="mb-2">
+              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-1">Goals</h4>
               <div class="flex justify-between">
                 <div><span class="text-purple-600 font-medium">Sales:</span> ${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</div>
                 <div><span class="text-purple-600 font-medium">Impressions:</span> ${result.goals.impressions || 'N/A'}</div>
@@ -519,9 +519,9 @@
             
             ${result.channels && result.channels.length > 0 ? `
             <div>
-              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-2">Channels</h4>
+              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-1">Channels</h4>
               ${result.channels.map((channel, index) => `
-              <div class="mb-2 ${index % 2 === 0 ? '' : 'bg-gray-50 p-1 rounded'}">
+              <div class="mb-2">
                 <div class="font-medium">${channel.type}</div>
                 <div class="ml-3">
                   ${channel.type === 'Social Media' ? 
