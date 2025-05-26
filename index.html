@@ -483,76 +483,63 @@
         
         if (response.ok) {
           // Format the result in a more user-friendly way
-          let formattedResult = `<div class="p-2 bg-white rounded-md shadow-md border border-purple-200">
-            <h3 class="text-lg font-bold text-purple-800 mb-1 border-b border-purple-100 pb-1">${result.name || 'Unnamed Campaign'}</h3>
-            
-            <table class="w-full border-collapse text-sm">
-              <tr>
-                <td class="py-0"><span class="text-xs font-medium text-purple-700">Campaign ID:</span> ${result.campaignId || 'N/A'}</td>
-                <td class="py-0"><span class="text-xs font-medium text-purple-700">Status:</span> ${result.status || 'N/A'}</td>
-              </tr>
-              <tr>
-                <td colspan="2" class="py-0"><span class="text-xs font-medium text-purple-700">Description:</span> ${result.description || 'No description provided'}</td>
-              </tr>
-              <tr>
-                <td class="py-0"><span class="text-xs font-medium text-purple-700">Start Date:</span> ${result.startDate || 'N/A'}</td>
-                <td class="py-0"><span class="text-xs font-medium text-purple-700">End Date:</span> ${result.endDate || 'N/A'}</td>
-              </tr>
-              <tr>
-                <td colspan="2" class="py-0"><span class="text-xs font-medium text-purple-700">Budget:</span> ${result.budget ? result.budget + ' AED' : 'N/A'}</td>
-              </tr>
-            </table>
+          let formattedResult = `<div class="p-3 bg-gray-50 rounded-md shadow-md border border-purple-100">
+            <div class="mb-3">
+              <div class="flex justify-between mb-2">
+                <div><span class="text-purple-600 font-medium">Campaign ID:</span> <span class="font-semibold">${result.campaignId || 'N/A'}</span></div>
+                <div><span class="text-purple-600 font-medium">Status:</span> <span class="font-semibold">${result.status || 'N/A'}</span></div>
+              </div>
+              <div class="mb-2"><span class="text-purple-600 font-medium">Description:</span> ${result.description || 'No description provided'}</div>
+              <div class="flex justify-between mb-2">
+                <div><span class="text-purple-600 font-medium">Start Date:</span> ${result.startDate || 'N/A'}</div>
+                <div><span class="text-purple-600 font-medium">End Date:</span> ${result.endDate || 'N/A'}</div>
+              </div>
+              <div><span class="text-purple-600 font-medium">Budget:</span> ${result.budget ? result.budget + ' AED' : 'N/A'}</div>
+            </div>
             
             ${result.targetAudience ? `
-            <div class="mt-1">
-              <p class="text-xs font-bold text-purple-800 border-b border-purple-100 pb-1 mb-0">Target Audience</p>
-              <table class="w-full border-collapse text-sm">
-                <tr>
-                  <td class="py-0"><span class="text-xs font-medium text-purple-700">Age:</span> ${result.targetAudience.age || 'N/A'}</td>
-                  <td class="py-0"><span class="text-xs font-medium text-purple-700">Gender:</span> ${result.targetAudience.gender || 'N/A'}</td>
-                  <td class="py-0"><span class="text-xs font-medium text-purple-700">Location:</span> ${result.targetAudience.location || 'N/A'}</td>
-                </tr>
-              </table>
+            <div class="mb-3">
+              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-2">Target Audience</h4>
+              <div class="flex justify-between">
+                <div><span class="text-purple-600 font-medium">Age:</span> ${result.targetAudience.age || 'N/A'}</div>
+                <div><span class="text-purple-600 font-medium">Gender:</span> ${result.targetAudience.gender || 'N/A'}</div>
+                <div><span class="text-purple-600 font-medium">Location:</span> ${result.targetAudience.location || 'N/A'}</div>
+              </div>
             </div>` : ''}
             
             ${result.goals ? `
-            <div class="mt-1">
-              <p class="text-xs font-bold text-purple-800 border-b border-purple-100 pb-1 mb-0">Goals</p>
-              <table class="w-full border-collapse text-sm">
-                <tr>
-                  <td class="py-0"><span class="text-xs font-medium text-purple-700">Sales:</span> ${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</td>
-                  <td class="py-0"><span class="text-xs font-medium text-purple-700">Impressions:</span> ${result.goals.impressions || 'N/A'}</td>
-                  <td class="py-0"><span class="text-xs font-medium text-purple-700">Conversions:</span> ${result.goals.conversions || 'N/A'}</td>
-                </tr>
-              </table>
+            <div class="mb-3">
+              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-2">Goals</h4>
+              <div class="flex justify-between">
+                <div><span class="text-purple-600 font-medium">Sales:</span> ${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</div>
+                <div><span class="text-purple-600 font-medium">Impressions:</span> ${result.goals.impressions || 'N/A'}</div>
+                <div><span class="text-purple-600 font-medium">Conversions:</span> ${result.goals.conversions || 'N/A'}</div>
+              </div>
             </div>` : ''}
             
             ${result.channels && result.channels.length > 0 ? `
-            <div class="mt-1">
-              <p class="text-xs font-bold text-purple-800 border-b border-purple-100 pb-1 mb-0">Channels</p>
-              <table class="w-full border-collapse text-sm">
-                ${result.channels.map((channel, index) => `
-                <tr${index % 2 === 0 ? '' : ' class="bg-gray-50"'}>
-                  <td class="py-0 pr-1">
-                    <span class="text-xs font-medium text-purple-700">${channel.type}</span>
-                  </td>
-                  <td class="py-0">
-                    ${channel.type === 'Social Media' ? 
-                      `<span class="text-xs text-gray-600">Platform: ${channel.platform || 'N/A'}, Type: ${channel.adType || 'N/A'}</span>` : 
-                     channel.type === 'Print Media' ? 
-                      `<span class="text-xs text-gray-600">Platform: ${channel.platform || 'N/A'}, Publication: ${channel.publication || 'N/A'}</span>` : 
-                     channel.type === 'TV' ? 
-                      `<span class="text-xs text-gray-600">Network: ${channel.network || 'N/A'}</span>` :
-                     channel.type === 'Radio' ? 
-                      `<span class="text-xs text-gray-600">Station: ${channel.station || 'N/A'}</span>` :
-                      ''}
-                  </td>
-                  <td class="py-0 text-right">
-                    <span class="text-xs text-gray-600">Ad: ${channel.adName || 'N/A'}, Cost: ${channel.cost ? channel.cost + ' AED' : 'N/A'}</span>
-                  </td>
-                </tr>
-                `).join('')}
-              </table>
+            <div>
+              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-2">Channels</h4>
+              ${result.channels.map((channel, index) => `
+              <div class="mb-2 ${index % 2 === 0 ? '' : 'bg-gray-50 p-1 rounded'}">
+                <div class="font-medium">${channel.type}</div>
+                <div class="ml-3">
+                  ${channel.type === 'Social Media' ? 
+                    `<div><span class="text-purple-600 font-medium">Platform:</span> ${channel.platform || 'N/A'}</div>
+                     <div><span class="text-purple-600 font-medium">Ad Type:</span> ${channel.adType || 'N/A'}</div>` : 
+                   channel.type === 'Print Media' ? 
+                    `<div><span class="text-purple-600 font-medium">Platform:</span> ${channel.platform || 'N/A'}</div>
+                     <div><span class="text-purple-600 font-medium">Publication:</span> ${channel.publication || 'N/A'}</div>` : 
+                   channel.type === 'TV' ? 
+                    `<div><span class="text-purple-600 font-medium">Network:</span> ${channel.network || 'N/A'}</div>` :
+                   channel.type === 'Radio' ? 
+                    `<div><span class="text-purple-600 font-medium">Station:</span> ${channel.station || 'N/A'}</div>` :
+                    ''}
+                  <div><span class="text-purple-600 font-medium">Ad Name:</span> ${channel.adName || 'N/A'}</div>
+                  <div><span class="text-purple-600 font-medium">Cost:</span> ${channel.cost ? channel.cost + ' AED' : 'N/A'}</div>
+                </div>
+              </div>
+              `).join('')}
             </div>` : ''}
           </div>`;
           
