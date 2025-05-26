@@ -483,64 +483,50 @@
         
         if (response.ok) {
           // Format the result in a more user-friendly way
-          let formattedResult = `<div class="p-3 bg-white rounded-md shadow-md border border-purple-100">
-            <div class="mb-2">
-              <div class="flex justify-between mb-2">
-                <div><span class="text-purple-600 font-medium">Campaign ID:</span> <span class="font-semibold">${result.campaignId || 'N/A'}</span></div>
-                <div><span class="text-purple-600 font-medium">Status:</span> <span class="font-semibold">${result.status || 'N/A'}</span></div>
-              </div>
-              <div class="mb-2"><span class="text-purple-600 font-medium">Description:</span> ${result.description || 'No description provided'}</div>
-              <div class="flex justify-between mb-2">
-                <div><span class="text-purple-600 font-medium">Start Date:</span> ${result.startDate || 'N/A'}</div>
-                <div><span class="text-purple-600 font-medium">End Date:</span> ${result.endDate || 'N/A'}</div>
-              </div>
-              <div><span class="text-purple-600 font-medium">Budget:</span> ${result.budget ? result.budget + ' AED' : 'N/A'}</div>
+          let formattedResult = `<div class="p-3 bg-white rounded-md shadow-sm border border-gray-100">
+            <div class="flex justify-between">
+              <div><span class="text-purple-600 font-medium">Campaign ID:</span> ${result.campaignId || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Status:</span> ${result.status || 'N/A'}</div>
             </div>
+            <div><span class="text-purple-600 font-medium">Description:</span> ${result.description || 'No description provided'}</div>
+            <div class="flex justify-between">
+              <div><span class="text-purple-600 font-medium">Start Date:</span> ${result.startDate || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">End Date:</span> ${result.endDate || 'N/A'}</div>
+            </div>
+            <div><span class="text-purple-600 font-medium">Budget:</span> ${result.budget ? result.budget + ' AED' : 'N/A'}</div>
             
             ${result.targetAudience ? `
-            <div class="mb-2">
-              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-1">Target Audience</h4>
-              <div class="flex justify-between">
-                <div><span class="text-purple-600 font-medium">Age:</span> ${result.targetAudience.age || 'N/A'}</div>
-                <div><span class="text-purple-600 font-medium">Gender:</span> ${result.targetAudience.gender || 'N/A'}</div>
-                <div><span class="text-purple-600 font-medium">Location:</span> ${result.targetAudience.location || 'N/A'}</div>
-              </div>
+            <div class="flex justify-between">
+              <div><span class="text-purple-600 font-medium">Age:</span> ${result.targetAudience.age || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Gender:</span> ${result.targetAudience.gender || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Location:</span> ${result.targetAudience.location || 'N/A'}</div>
             </div>` : ''}
             
             ${result.goals ? `
-            <div class="mb-2">
-              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-1">Goals</h4>
-              <div class="flex justify-between">
-                <div><span class="text-purple-600 font-medium">Sales:</span> ${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</div>
-                <div><span class="text-purple-600 font-medium">Impressions:</span> ${result.goals.impressions || 'N/A'}</div>
-                <div><span class="text-purple-600 font-medium">Conversions:</span> ${result.goals.conversions || 'N/A'}</div>
-              </div>
+            <div class="flex justify-between">
+              <div><span class="text-purple-600 font-medium">Sales:</span> ${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Impressions:</span> ${result.goals.impressions || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Conversions:</span> ${result.goals.conversions || 'N/A'}</div>
             </div>` : ''}
             
             ${result.channels && result.channels.length > 0 ? `
+            ${result.channels.map((channel, index) => `
             <div>
-              <h4 class="text-purple-800 font-medium border-b border-purple-100 pb-1 mb-1">Channels</h4>
-              ${result.channels.map((channel, index) => `
-              <div class="mb-2">
-                <div class="font-medium">${channel.type}</div>
-                <div class="ml-3">
-                  ${channel.type === 'Social Media' ? 
-                    `<div><span class="text-purple-600 font-medium">Platform:</span> ${channel.platform || 'N/A'}</div>
-                     <div><span class="text-purple-600 font-medium">Ad Type:</span> ${channel.adType || 'N/A'}</div>` : 
-                   channel.type === 'Print Media' ? 
-                    `<div><span class="text-purple-600 font-medium">Platform:</span> ${channel.platform || 'N/A'}</div>
-                     <div><span class="text-purple-600 font-medium">Publication:</span> ${channel.publication || 'N/A'}</div>` : 
-                   channel.type === 'TV' ? 
-                    `<div><span class="text-purple-600 font-medium">Network:</span> ${channel.network || 'N/A'}</div>` :
-                   channel.type === 'Radio' ? 
-                    `<div><span class="text-purple-600 font-medium">Station:</span> ${channel.station || 'N/A'}</div>` :
-                    ''}
-                  <div><span class="text-purple-600 font-medium">Ad Name:</span> ${channel.adName || 'N/A'}</div>
-                  <div><span class="text-purple-600 font-medium">Cost:</span> ${channel.cost ? channel.cost + ' AED' : 'N/A'}</div>
-                </div>
-              </div>
-              `).join('')}
-            </div>` : ''}
+              ${channel.type === 'Social Media' ? `
+              <div><span class="text-purple-600 font-medium">Platform:</span> ${channel.platform || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Ad Type:</span> ${channel.adType || 'N/A'}</div>` : 
+              channel.type === 'Print Media' ? `
+              <div><span class="text-purple-600 font-medium">Platform:</span> ${channel.platform || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Publication:</span> ${channel.publication || 'N/A'}</div>` : 
+              channel.type === 'TV' ? `
+              <div><span class="text-purple-600 font-medium">Network:</span> ${channel.network || 'N/A'}</div>` :
+              channel.type === 'Radio' ? `
+              <div><span class="text-purple-600 font-medium">Station:</span> ${channel.station || 'N/A'}</div>` :
+              ''}
+              <div><span class="text-purple-600 font-medium">Ad Name:</span> ${channel.adName || 'N/A'}</div>
+              <div><span class="text-purple-600 font-medium">Cost:</span> ${channel.cost ? channel.cost + ' AED' : 'N/A'}</div>
+            </div>
+            `).join('')}` : ''}
           </div>`;
           
           queryResult.innerHTML = formattedResult;
