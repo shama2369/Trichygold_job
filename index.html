@@ -483,53 +483,53 @@
         
         if (response.ok) {
           // Format the result in a more user-friendly way
-          let formattedResult = `<div class="p-4 bg-white rounded-md shadow-md">
-            <h3 class="text-xl font-bold text-purple-700 mb-3">${result.name || 'Unnamed Campaign'}</h3>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <p class="text-sm font-medium text-gray-600">Campaign ID</p>
-                <p class="font-semibold">${result.campaignId || 'N/A'}</p>
+          let formattedResult = `<div class="p-3 bg-white rounded-md shadow-md border border-purple-100">
+            <h3 class="text-lg font-bold text-purple-800 mb-2 border-b border-purple-100 pb-1">${result.name || 'Unnamed Campaign'}</h3>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div class="bg-purple-50 px-2 py-1 rounded">
+                <p class="text-xs font-medium text-purple-700 m-0">Campaign ID</p>
+                <p class="font-semibold text-sm m-0">${result.campaignId || 'N/A'}</p>
               </div>
-              <div>
-                <p class="text-sm font-medium text-gray-600">Status</p>
-                <p class="font-semibold">${result.status || 'N/A'}</p>
+              <div class="bg-purple-50 px-2 py-1 rounded">
+                <p class="text-xs font-medium text-purple-700 m-0">Status</p>
+                <p class="font-semibold text-sm m-0">${result.status || 'N/A'}</p>
               </div>
             </div>
-            <div class="mb-4">
-              <p class="text-sm font-medium text-gray-600">Description</p>
-              <p>${result.description || 'No description provided'}</p>
+            <div class="bg-purple-50 px-2 py-1 rounded mb-2">
+              <p class="text-xs font-medium text-purple-700 m-0">Description</p>
+              <p class="text-sm m-0">${result.description || 'No description provided'}</p>
             </div>
-            <div class="grid grid-cols-3 gap-4 mb-4">
-              <div>
-                <p class="text-sm font-medium text-gray-600">Start Date</p>
-                <p>${result.startDate || 'N/A'}</p>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="bg-purple-50 px-2 py-1 rounded">
+                <p class="text-xs font-medium text-purple-700 m-0">Start Date</p>
+                <p class="text-sm m-0">${result.startDate || 'N/A'}</p>
               </div>
-              <div>
-                <p class="text-sm font-medium text-gray-600">End Date</p>
-                <p>${result.endDate || 'N/A'}</p>
+              <div class="bg-purple-50 px-2 py-1 rounded">
+                <p class="text-xs font-medium text-purple-700 m-0">End Date</p>
+                <p class="text-sm m-0">${result.endDate || 'N/A'}</p>
               </div>
-              <div>
-                <p class="text-sm font-medium text-gray-600">Budget</p>
-                <p>${result.budget ? result.budget + ' AED' : 'N/A'}</p>
+              <div class="bg-purple-50 px-2 py-1 rounded">
+                <p class="text-xs font-medium text-purple-700 m-0">Budget</p>
+                <p class="text-sm m-0">${result.budget ? result.budget + ' AED' : 'N/A'}</p>
               </div>
             </div>`;
           
           // Target Audience section
           if (result.targetAudience) {
-            formattedResult += `<div class="mb-4">
-              <p class="text-sm font-medium text-gray-600 mb-2">Target Audience</p>
-              <div class="grid grid-cols-3 gap-4 pl-4">
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Age</p>
-                  <p>${result.targetAudience.age || 'N/A'}</p>
+            formattedResult += `<div class="mb-2">
+              <p class="text-xs font-bold text-purple-800 border-b border-purple-100 pb-1 mb-1">Target Audience</p>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="bg-purple-50 px-2 py-1 rounded">
+                  <p class="text-xs font-medium text-purple-700 m-0">Age</p>
+                  <p class="text-sm m-0">${result.targetAudience.age || 'N/A'}</p>
                 </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Gender</p>
-                  <p>${result.targetAudience.gender || 'N/A'}</p>
+                <div class="bg-purple-50 px-2 py-1 rounded">
+                  <p class="text-xs font-medium text-purple-700 m-0">Gender</p>
+                  <p class="text-sm m-0">${result.targetAudience.gender || 'N/A'}</p>
                 </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Location</p>
-                  <p>${result.targetAudience.location || 'N/A'}</p>
+                <div class="bg-purple-50 px-2 py-1 rounded">
+                  <p class="text-xs font-medium text-purple-700 m-0">Location</p>
+                  <p class="text-sm m-0">${result.targetAudience.location || 'N/A'}</p>
                 </div>
               </div>
             </div>`;
@@ -537,20 +537,20 @@
           
           // Goals section
           if (result.goals) {
-            formattedResult += `<div class="mb-4">
-              <p class="text-sm font-medium text-gray-600 mb-2">Goals</p>
-              <div class="grid grid-cols-3 gap-4 pl-4">
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Sales</p>
-                  <p>${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</p>
+            formattedResult += `<div class="mb-2">
+              <p class="text-xs font-bold text-purple-800 border-b border-purple-100 pb-1 mb-1">Goals</p>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="bg-purple-50 px-2 py-1 rounded">
+                  <p class="text-xs font-medium text-purple-700 m-0">Sales</p>
+                  <p class="text-sm m-0">${result.goals.sales ? result.goals.sales + ' AED' : 'N/A'}</p>
                 </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Impressions</p>
-                  <p>${result.goals.impressions || 'N/A'}</p>
+                <div class="bg-purple-50 px-2 py-1 rounded">
+                  <p class="text-xs font-medium text-purple-700 m-0">Impressions</p>
+                  <p class="text-sm m-0">${result.goals.impressions || 'N/A'}</p>
                 </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Conversions</p>
-                  <p>${result.goals.conversions || 'N/A'}</p>
+                <div class="bg-purple-50 px-2 py-1 rounded">
+                  <p class="text-xs font-medium text-purple-700 m-0">Conversions</p>
+                  <p class="text-sm m-0">${result.goals.conversions || 'N/A'}</p>
                 </div>
               </div>
             </div>`;
@@ -558,53 +558,53 @@
           
           // Channels section
           if (result.channels && result.channels.length > 0) {
-            formattedResult += `<div class="mb-4">
-              <p class="text-sm font-medium text-gray-600 mb-2">Channels</p>
-              <div class="space-y-3 pl-4">`;
+            formattedResult += `<div class="mb-2">
+              <p class="text-xs font-bold text-purple-800 border-b border-purple-100 pb-1 mb-1">Channels</p>
+              <div class="space-y-2">`;
               
             result.channels.forEach(channel => {
-              formattedResult += `<div class="p-2 bg-purple-50 rounded-md">
-                <p class="font-medium text-purple-700">${channel.type}</p>
-                <div class="grid grid-cols-2 gap-2 mt-1">`;
+              formattedResult += `<div class="p-1 bg-purple-50 rounded border border-purple-100">
+                <p class="font-medium text-purple-700 text-xs border-b border-purple-100 pb-1 mb-1">${channel.type}</p>
+                <div class="grid grid-cols-2 gap-1">`;
                 
               // Add channel-specific details based on type
               if (channel.type === 'Social Media') {
                 formattedResult += `
-                  <div>
-                    <p class="text-xs font-medium text-gray-500">Platform</p>
-                    <p>${channel.platform || 'N/A'}</p>
+                  <div class="px-1">
+                    <p class="text-xs font-medium text-purple-700 m-0">Platform</p>
+                    <p class="text-xs m-0">${channel.platform || 'N/A'}</p>
                   </div>
-                  <div>
-                    <p class="text-xs font-medium text-gray-500">Ad Type</p>
-                    <p>${channel.adType || 'N/A'}</p>
+                  <div class="px-1">
+                    <p class="text-xs font-medium text-purple-700 m-0">Ad Type</p>
+                    <p class="text-xs m-0">${channel.adType || 'N/A'}</p>
                   </div>`;
               } else if (channel.type === 'Print Media') {
                 formattedResult += `
-                  <div>
-                    <p class="text-xs font-medium text-gray-500">Platform</p>
-                    <p>${channel.platform || 'N/A'}</p>
+                  <div class="px-1">
+                    <p class="text-xs font-medium text-purple-700 m-0">Platform</p>
+                    <p class="text-xs m-0">${channel.platform || 'N/A'}</p>
                   </div>
-                  <div>
-                    <p class="text-xs font-medium text-gray-500">Publication</p>
-                    <p>${channel.publication || 'N/A'}</p>
+                  <div class="px-1">
+                    <p class="text-xs font-medium text-purple-700 m-0">Publication</p>
+                    <p class="text-xs m-0">${channel.publication || 'N/A'}</p>
                   </div>`;
               } else if (channel.type === 'TV' || channel.type === 'Radio') {
                 formattedResult += `
-                  <div>
-                    <p class="text-xs font-medium text-gray-500">${channel.type === 'TV' ? 'Network' : 'Station'}</p>
-                    <p>${channel.network || channel.station || 'N/A'}</p>
+                  <div class="px-1">
+                    <p class="text-xs font-medium text-purple-700 m-0">${channel.type === 'TV' ? 'Network' : 'Station'}</p>
+                    <p class="text-xs m-0">${channel.network || channel.station || 'N/A'}</p>
                   </div>`;
               }
               
               // Common fields for all channel types
               formattedResult += `
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Ad Name</p>
-                  <p>${channel.adName || 'N/A'}</p>
+                <div class="px-1">
+                  <p class="text-xs font-medium text-purple-700 m-0">Ad Name</p>
+                  <p class="text-xs m-0">${channel.adName || 'N/A'}</p>
                 </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500">Cost</p>
-                  <p>${channel.cost ? channel.cost + ' AED' : 'N/A'}</p>
+                <div class="px-1">
+                  <p class="text-xs font-medium text-purple-700 m-0">Cost</p>
+                  <p class="text-xs m-0">${channel.cost ? channel.cost + ' AED' : 'N/A'}</p>
                 </div>`;
                 
               formattedResult += `</div></div>`;
