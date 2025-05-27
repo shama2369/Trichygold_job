@@ -497,14 +497,161 @@
         const result = await response.json();
         
         if (response.ok) {
-          preElement.textContent = JSON.stringify(result, null, 2);
+          let formattedResult = `
+            <div class="space-y-6">
+              <!-- Basic Information -->
+              <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 class="text-lg font-semibold text-purple-700 mb-3">Campaign Information</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Campaign ID</p>
+                    <p class="text-base text-gray-900">${result.campaignId || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Name</p>
+                    <p class="text-base text-gray-900">${result.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Status</p>
+                    <p class="text-base text-gray-900">${result.status || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Budget</p>
+                    <p class="text-base text-gray-900">${result.budget ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(result.budget) : 'N/A'}</p>
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <p class="text-sm font-medium text-gray-600">Description</p>
+                  <p class="text-base text-gray-900">${result.description || 'No description provided'}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-3">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Start Date</p>
+                    <p class="text-base text-gray-900">${result.startDate ? new Date(result.startDate).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">End Date</p>
+                    <p class="text-base text-gray-900">${result.endDate ? new Date(result.endDate).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Target Audience -->
+              ${result.targetAudience ? `
+              <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 class="text-lg font-semibold text-purple-700 mb-3">Target Audience</h4>
+                <div class="grid grid-cols-3 gap-4">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Age</p>
+                    <p class="text-base text-gray-900">${result.targetAudience.age || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Gender</p>
+                    <p class="text-base text-gray-900">${result.targetAudience.gender || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Location</p>
+                    <p class="text-base text-gray-900">${result.targetAudience.location || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>` : ''}
+
+              <!-- Goals -->
+              ${result.goals ? `
+              <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 class="text-lg font-semibold text-purple-700 mb-3">Campaign Goals</h4>
+                <div class="grid grid-cols-3 gap-4">
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Sales Target</p>
+                    <p class="text-base text-gray-900">${result.goals.sales ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(result.goals.sales) : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Target Impressions</p>
+                    <p class="text-base text-gray-900">${result.goals.impressions ? new Intl.NumberFormat().format(result.goals.impressions) : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-600">Target Conversions</p>
+                    <p class="text-base text-gray-900">${result.goals.conversions ? new Intl.NumberFormat().format(result.goals.conversions) : 'N/A'}</p>
+                  </div>
+                </div>
+              </div>` : ''}
+
+              <!-- Channels -->
+              ${result.channels && result.channels.length > 0 ? `
+              <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h4 class="text-lg font-semibold text-purple-700 mb-3">Marketing Channels</h4>
+                <div class="space-y-4">
+                  ${result.channels.map((channel, index) => `
+                    <div class="${index > 0 ? 'border-t pt-4' : ''}">
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Channel Type</p>
+                          <p class="text-base text-gray-900">${channel.type || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Ad Name</p>
+                          <p class="text-base text-gray-900">${channel.adName || 'N/A'}</p>
+                        </div>
+                        ${channel.platform ? `
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Platform</p>
+                          <p class="text-base text-gray-900">${channel.platform}</p>
+                        </div>` : ''}
+                        ${channel.network ? `
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Network</p>
+                          <p class="text-base text-gray-900">${channel.network}</p>
+                        </div>` : ''}
+                        ${channel.publication ? `
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Publication</p>
+                          <p class="text-base text-gray-900">${channel.publication}</p>
+                        </div>` : ''}
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Cost</p>
+                          <p class="text-base text-gray-900">${channel.cost ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(channel.cost) : 'N/A'}</p>
+                        </div>
+                        ${channel.adType ? `
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Ad Type</p>
+                          <p class="text-base text-gray-900">${channel.adType}</p>
+                        </div>` : ''}
+                        ${channel.qty ? `
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Quantity</p>
+                          <p class="text-base text-gray-900">${channel.qty}</p>
+                        </div>` : ''}
+                        ${channel.startDate ? `
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">Start Date</p>
+                          <p class="text-base text-gray-900">${new Date(channel.startDate).toLocaleDateString()}</p>
+                        </div>` : ''}
+                        ${channel.endDate ? `
+                        <div>
+                          <p class="text-sm font-medium text-gray-600">End Date</p>
+                          <p class="text-base text-gray-900">${new Date(channel.endDate).toLocaleDateString()}</p>
+                        </div>` : ''}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>` : ''}
+            </div>`;
+
+          queryResult.innerHTML = formattedResult;
           queryResult.classList.remove('hidden');
         } else {
-          preElement.textContent = `Error: ${result.error}`;
+          queryResult.innerHTML = `
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+              <p class="text-red-700">${result.error}</p>
+            </div>`;
           queryResult.classList.remove('hidden');
         }
       } catch (err) {
-        preElement.textContent = `Error: ${err.message}`;
+        queryResult.innerHTML = `
+          <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+            <p class="text-red-700">Error: ${err.message}</p>
+          </div>`;
         queryResult.classList.remove('hidden');
       }
     }
