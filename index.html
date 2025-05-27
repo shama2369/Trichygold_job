@@ -179,13 +179,26 @@
     </div>
     
     <!-- Query Campaign -->
-    <div class="mb-6">
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Query Campaign</h2>
-      <div class="flex space-x-2">
-        <input id="queryCampaignId" type="text" class="flex-grow p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-        <button onclick="queryCampaign()" class="btn-secondary py-2 px-4 rounded-md">Query</button>
+    <div class="mb-6 bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold text-purple-700 mb-4">Query Campaign</h2>
+      <div class="space-y-4">
+        <div>
+          <label for="queryCampaignId" class="block text-sm font-medium text-gray-700 mb-2">Enter Campaign ID</label>
+          <div class="flex space-x-3">
+            <input id="queryCampaignId" type="text" 
+                   class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                   placeholder="e.g., CAMP_0001">
+            <button onclick="queryCampaign()" 
+                    class="btn-secondary py-2 px-6 rounded-md whitespace-nowrap">
+              Search Campaign
+            </button>
+          </div>
+        </div>
+        <div id="queryResult" class="mt-4 p-4 bg-gray-50 rounded-md border border-gray-200 hidden">
+          <h3 class="text-sm font-medium text-gray-700 mb-2">Campaign Details</h3>
+          <pre class="text-sm text-gray-600 whitespace-pre-wrap"></pre>
+        </div>
       </div>
-      <pre id="queryResult" class="mt-4 p-4 bg-gray-100 rounded-md hidden"></pre>
     </div>
     
     <!-- Export Campaigns -->
@@ -476,163 +489,25 @@
 
     async function queryCampaign() {
       const campaignId = document.getElementById('queryCampaignId').value;
+      const queryResult = document.getElementById('queryResult');
+      const preElement = queryResult.querySelector('pre');
+      
       try {
         const response = await fetch(`/api/campaigns/${campaignId}`);
         const result = await response.json();
-        const queryResult = document.getElementById('queryResult');
         
         if (response.ok) {
-          let formattedResult = `<div class="p-4 bg-white rounded-md shadow-sm border border-gray-100">
-            <div class="mb-3">
-              <h3 class="text-xl font-semibold text-purple-700">${result.name || 'Campaign Details'}</h3>
-            </div>
-            <div class="grid gap-3">
-              <div class="bg-white p-3 rounded-lg border border-gray-200">
-                <div class="grid grid-cols-3 gap-3">
-                  <div>
-                    <div class="text-sm font-medium text-purple-700 mb-1">Campaign ID:</div>
-                    <div class="text-gray-900 font-medium">${result.campaignId || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-purple-700 mb-1">Status:</div>
-                    <div class="text-gray-900 font-medium">${result.status || 'N/A'}</div>
-                  </div>
-                  <div>
-                    <div class="text-sm font-medium text-purple-700 mb-1">Budget:</div>
-                    <div class="text-gray-900 font-medium">${result.budget ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(result.budget) : 'N/A'}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-3">
-                <div class="text-sm font-medium text-purple-700 mb-1">Description:</div>
-                <div class="text-gray-900 bg-white p-3 rounded border border-gray-200">${result.description || 'No description provided'}</div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-3 mt-3">
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">Start Date:</div>
-                  <div class="text-gray-900">${result.startDate ? new Date(result.startDate).toLocaleDateString('en-AE', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</div>
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">End Date:</div>
-                  <div class="text-gray-900">${result.endDate ? new Date(result.endDate).toLocaleDateString('en-AE', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</div>
-                </div>
-              </div>
-
-              ${result.targetAudience ? `
-          <div class="border-t pt-3">
-            <div class="text-md font-semibold text-purple-700 mb-2">Target Audience</div>
-            <div class="bg-white p-3 rounded border border-gray-200">
-              <div class="grid grid-cols-3 gap-3">
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">Age:</div>
-                  <div class="text-gray-900">${result.targetAudience.age || 'N/A'}</div>
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">Gender:</div>
-                  <div class="text-gray-900">${result.targetAudience.gender || 'N/A'}</div>
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">Location:</div>
-                  <div class="text-gray-900">${result.targetAudience.location || 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-          </div>` : ''}
-
-              ${result.goals ? `
-          <div class="border-t pt-3">
-            <div class="text-md font-semibold text-purple-700 mb-2">Goals</div>
-            <div class="bg-white p-3 rounded border border-gray-200">
-              <div class="grid grid-cols-3 gap-3">
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">Sales Target:</div>
-                  <div class="text-gray-900">${result.goals.sales ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(result.goals.sales) : 'N/A'}</div>
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">Target Impressions:</div>
-                  <div class="text-gray-900">${result.goals.impressions ? new Intl.NumberFormat().format(result.goals.impressions) : 'N/A'}</div>
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-purple-700 mb-1">Target Conversions:</div>
-                  <div class="text-gray-900">${result.goals.conversions ? new Intl.NumberFormat().format(result.goals.conversions) : 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-          </div>` : ''}
-
-              ${result.channels && result.channels.length > 0 ? `
-          <div class="border-t pt-3">
-            <div class="text-md font-semibold text-purple-700 mb-2">Marketing Channels</div>
-            <div class="bg-white p-3 rounded border border-gray-200 space-y-3">
-                ${result.channels.map((channel, index) => `
-                <div class="${index > 0 ? 'mt-3 pt-3 border-t border-gray-100' : ''}">
-                  <div class="grid grid-cols-6 gap-3">
-                    <div class="col-span-2">
-                      <div class="text-sm font-medium text-purple-700 mb-1">Channel Type:</div>
-                      <div class="text-gray-900">${channel.type || 'N/A'}</div>
-                    </div>
-
-                    ${channel.type === 'Social Media' ? `
-                    <div class="col-span-2">
-                      <div class="text-sm font-medium text-purple-700 mb-1">Platform:</div>
-                      <div class="text-gray-900">${channel.platform || 'N/A'}</div>
-                    </div>
-                    <div class="col-span-2">
-                      <div class="text-sm font-medium text-purple-700 mb-1">Ad Type:</div>
-                      <div class="text-gray-900">${channel.adType || 'N/A'}</div>
-                    </div>` : 
-                    channel.type === 'Print Media' ? `
-                    <div class="col-span-2">
-                      <div class="text-sm font-medium text-purple-700 mb-1">Platform:</div>
-                      <div class="text-gray-900">${channel.platform || 'N/A'}</div>
-                    </div>
-                    <div class="col-span-2">
-                      <div class="text-sm font-medium text-purple-700 mb-1">Publication:</div>
-                      <div class="text-gray-900">${channel.publication || 'N/A'}</div>
-                    </div>` : 
-                    channel.type === 'TV' ? `
-                    <div class="col-span-4">
-                      <div class="text-sm font-medium text-purple-700 mb-1">Network:</div>
-                      <div class="text-gray-900">${channel.network || 'N/A'}</div>
-                    </div>` :
-                    channel.type === 'Radio' ? `
-                    <div class="col-span-4">
-                      <div class="text-sm font-medium text-purple-700 mb-1">Station:</div>
-                      <div class="text-gray-900">${channel.station || 'N/A'}</div>
-                    </div>` :
-                    ''}
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-3 mt-3">
-                    <div>
-                      <div class="text-sm font-medium text-purple-700 mb-1">Ad Name:</div>
-                      <div class="text-gray-900">${channel.adName || 'N/A'}</div>
-                    </div>
-                    <div>
-                      <div class="text-sm font-medium text-purple-700 mb-1">Cost:</div>
-                      <div class="text-gray-900">${channel.cost ? channel.cost + ' AED' : 'N/A'}</div>
-                    </div>
-                  </div>
-                </div>
-                `).join('')}
-              </div>` : ''}
-            </div>
-          </div>`;
-
-          queryResult.innerHTML = formattedResult;
+          preElement.textContent = JSON.stringify(result, null, 2);
           queryResult.classList.remove('hidden');
         } else {
-          queryResult.innerHTML = `<div class="p-2 bg-red-50 text-red-700 rounded-md">${result.error}</div>`;
+          preElement.textContent = `Error: ${result.error}`;
           queryResult.classList.remove('hidden');
         }
       } catch (err) {
-        alert('Error: ' + err.message);
+        preElement.textContent = `Error: ${err.message}`;
+        queryResult.classList.remove('hidden');
       }
     }
-
-
 
     function exportCampaigns() {
       window.location.href = '/api/campaigns/export';
