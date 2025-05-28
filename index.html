@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/public/styles.css">
   <style>
     body {
-      background: linear-gradient(135deg, #6B46C1, #9F7AEA);
+      background: linear-gradient(135deg, #E9D8FD, #D6BCFA);
       min-height: 100vh;
       font-family: 'Arial', sans-serif;
     }
@@ -59,137 +59,194 @@
   <div class="card w-full max-w-4xl p-6">
     <h1 class="text-2xl font-bold text-center text-purple-700 mb-6">Trichy Gold Campaign Manager</h1>
     
-    <!-- Campaign Form -->
-    <div class="mb-6">
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Create/Update Campaign</h2>
-      <div class="space-y-6">
-        <!-- Campaign ID and Name -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="campaignId" class="block text-sm font-medium text-purple-700">Campaign ID</label>
-            <input id="campaignId" type="text" readonly class="w-full p-2 border rounded-md bg-gray-100 focus:outline-none">
-          </div>
-          <div>
-            <label for="name" class="block text-sm font-medium text-purple-700">Campaign Name</label>
-            <input id="name" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-        </div>
-        
-        <!-- Description -->
-        <div>
-          <label for="description" class="block text-sm font-medium text-purple-700">Description</label>
-          <input id="description" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-        
-        <!-- Start Date and End Date -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="startDate" class="block text-sm font-medium text-purple-700">Start Date</label>
-            <input id="startDate" type="date" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-          <div>
-            <label for="endDate" class="block text-sm font-medium text-purple-700">End Date</label>
-            <input id="endDate" type="date" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-        </div>
-        
-        <!-- Budget and Status -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="budget" class="block text-sm font-medium text-purple-700">Budget (AED)</label>
-            <input id="budget" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-          <div>
-            <label for="status" class="block text-sm font-medium text-purple-700">Status</label>
-            <select id="status" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Planned">Planned</option>
-            </select>
-          </div>
-        </div>
-        
-        <!-- Target Audience -->
-        <div class="border-t pt-4">
-          <h3 class="text-md font-medium text-purple-600 mb-2">Target Audience</h3>
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label for="targetAge" class="block text-sm font-medium text-purple-700">Age</label>
-              <input id="targetAge" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-            <div>
-              <label for="targetGender" class="block text-sm font-medium text-purple-700">Gender</label>
-              <select id="targetGender" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="All">All</option>
-              </select>
-            </div>
-            <div>
-              <label for="targetLocation" class="block text-sm font-medium text-purple-700">Location</label>
-              <input id="targetLocation" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-          </div>
-        </div>
-        
-        <!-- Goals -->
-        <div class="border-t pt-4">
-          <h3 class="text-md font-medium text-purple-600 mb-2">Goals</h3>
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label for="goalSales" class="block text-sm font-medium text-purple-700">Sales (AED)</label>
-              <input id="goalSales" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-            <div>
-              <label for="goalImpressions" class="block text-sm font-medium text-purple-700">Impressions</label>
-              <input id="goalImpressions" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-            <div>
-              <label for="goalConversions" class="block text-sm font-medium text-purple-700">Conversions</label>
-              <input id="goalConversions" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-            </div>
-          </div>
-        </div>
-        
-        <!-- Channels -->
-        <div class="border-t pt-4">
-          <h3 class="text-md font-medium text-purple-600 mb-2">Channels</h3>
-          <div id="channelContainer" class="space-y-4">
-            <div class="channelEntry grid grid-cols-6 gap-2 items-end">
-              <div class="col-span-1">
-                <label class="block text-sm font-medium text-purple-700">Channel Type</label>
-                <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
-                  <option value="">Select Channel</option>
-                  <option value="Social Media">Social Media</option>
-                  <option value="Print Media">Print Media</option>
-                  <option value="Email">Email</option>
-                  <option value="Message">Message</option>
-                  <option value="Radio">Radio</option>
-                  <option value="TV">TV</option>
-                </select>
-              </div>
-              <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
-            </div>
-          </div>
-          <button class="btn-secondary mt-2 py-2 px-4 rounded-md" onclick="addChannelEntry()">Add Channel</button>
-        </div>
-        
-        <button onclick="submitCampaign()" class="btn-primary w-full py-2 rounded-md">Submit Campaign</button>
+    <!-- Main Menu -->
+    <div class="mb-8">
+      <div class="grid grid-cols-4 gap-4">
+        <button onclick="showSection('new-campaign')" class="btn-primary py-3 px-4 rounded-md flex flex-col items-center">
+          <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          New Campaign
+        </button>
+        <button onclick="showSection('edit-campaign')" class="btn-secondary py-3 px-4 rounded-md flex flex-col items-center">
+          <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+          Edit Campaign
+        </button>
+        <button onclick="showSection('query-campaign')" class="btn-primary py-3 px-4 rounded-md flex flex-col items-center">
+          <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          Query Campaign
+        </button>
+        <button onclick="showSection('export-campaign')" class="btn-secondary py-3 px-4 rounded-md flex flex-col items-center">
+          <svg class="w-6 h-6 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2-8H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-1V3a1 1 0 00-1-1h-4a1 1 0 00-1 1v2z"></path>
+          </svg>
+          Export Campaigns
+        </button>
       </div>
     </div>
-    
-    <!-- Query Campaign -->
-    <div class="mb-6 bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold text-purple-700 mb-4">Query Campaign</h2>
+
+    <!-- New Campaign Section -->
+    <div id="new-campaign" class="section">
+      <h2 class="text-lg font-semibold text-purple-700 mb-4">Create Campaign</h2>
+      <div class="space-y-6">
+        <!-- Campaign Form -->
+        <div class="mb-6">
+          <div class="space-y-6">
+            <!-- Campaign ID and Name -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="campaignId" class="block text-sm font-medium text-purple-700">Campaign ID</label>
+                <input id="campaignId" type="text" readonly class="w-full p-2 border rounded-md bg-gray-100 focus:outline-none">
+              </div>
+              <div>
+                <label for="name" class="block text-sm font-medium text-purple-700">Campaign Name</label>
+                <input id="name" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+              </div>
+            </div>
+            
+            <!-- Description -->
+            <div>
+              <label for="description" class="block text-sm font-medium text-purple-700">Description</label>
+              <input id="description" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+            
+            <!-- Start Date and End Date -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="startDate" class="block text-sm font-medium text-purple-700">Start Date</label>
+                <input id="startDate" type="date" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+              </div>
+              <div>
+                <label for="endDate" class="block text-sm font-medium text-purple-700">End Date</label>
+                <input id="endDate" type="date" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+              </div>
+            </div>
+            
+            <!-- Budget and Status -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="budget" class="block text-sm font-medium text-purple-700">Budget (AED)</label>
+                <input id="budget" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+              </div>
+              <div>
+                <label for="status" class="block text-sm font-medium text-purple-700">Status</label>
+                <select id="status" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Planned">Planned</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Target Audience -->
+            <div class="border-t pt-4">
+              <h3 class="text-md font-medium text-purple-600 mb-2">Target Audience</h3>
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label for="targetAge" class="block text-sm font-medium text-purple-700">Age</label>
+                  <input id="targetAge" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label for="targetGender" class="block text-sm font-medium text-purple-700">Gender</label>
+                  <select id="targetGender" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="All">All</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="targetLocation" class="block text-sm font-medium text-purple-700">Location</label>
+                  <input id="targetLocation" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Goals -->
+            <div class="border-t pt-4">
+              <h3 class="text-md font-medium text-purple-600 mb-2">Goals</h3>
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label for="goalSales" class="block text-sm font-medium text-purple-700">Sales (AED)</label>
+                  <input id="goalSales" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label for="goalImpressions" class="block text-sm font-medium text-purple-700">Impressions</label>
+                  <input id="goalImpressions" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label for="goalConversions" class="block text-sm font-medium text-purple-700">Conversions</label>
+                  <input id="goalConversions" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Channels -->
+            <div class="border-t pt-4">
+              <h3 class="text-md font-medium text-purple-600 mb-2">Channels</h3>
+              <div id="channelContainer" class="space-y-4">
+                <div class="channelEntry grid grid-cols-6 gap-2 items-end">
+                  <div class="col-span-1">
+                    <label class="block text-sm font-medium text-purple-700">Channel Type</label>
+                    <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
+                      <option value="">Slt Channel</option>
+                      <option value="Social Media">Social Media</option>
+                      <option value="Print Media">Print Media</option>
+                      <option value="Email">Email</option>
+                      <option value="Message">Message</option>
+                      <option value="Radio">Radio</option>
+                      <option value="TV">TV</option>
+                    </select>
+                  </div>
+                  <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
+                </div>
+              </div>
+              <button class="btn-secondary mt-2 py-2 px-4 rounded-md" onclick="addChannelEntry()">Add Channel</button>
+            </div>
+            
+            <button onclick="submitCampaign()" class="btn-primary w-full py-2 rounded-md">Submit Campaign</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Campaign Section -->
+    <div id="edit-campaign" class="section hidden">
+      <h2 class="text-lg font-semibold text-purple-700 mb-4">Edit Campaign</h2>
+      <div class="space-y-6">
+        <div class="mb-6">
+          <label for="editCampaignId" class="block text-sm font-medium text-gray-700 mb-2">Enter Campaign ID to Edit</label>
+          <div class="flex items-center space-x-4">
+            <input id="editCampaignId" type="text" 
+                   class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                   placeholder="e.g., CAMP_0001">
+            <button onclick="loadCampaignForEdit()" 
+                    class="btn-secondary py-2 px-6 rounded-md whitespace-nowrap ml-12">
+              Load Campaign
+            </button>
+          </div>
+        </div>
+        <div id="editCampaignForm" class="hidden mt-6 pt-4 border-t">
+          <!-- Campaign form will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Query Campaign Section -->
+    <div id="query-campaign" class="section hidden">
+      <h2 class="text-lg font-semibold text-purple-700 mb-4">Query Campaign</h2>
       <div class="space-y-4">
         <div>
           <label for="queryCampaignId" class="block text-sm font-medium text-gray-700 mb-2">Enter Campaign ID</label>
-          <div class="flex space-x-3">
+          <div class="flex items-center space-x-4">
             <input id="queryCampaignId" type="text" 
                    class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                    placeholder="e.g., CAMP_0001">
             <button onclick="queryCampaign()" 
-                    class="btn-secondary py-2 px-6 rounded-md whitespace-nowrap">
+                    class="btn-secondary py-2 px-6 rounded-md whitespace-nowrap ml-12">
               Search Campaign
             </button>
           </div>
@@ -200,10 +257,10 @@
         </div>
       </div>
     </div>
-    
-    <!-- Export Campaigns -->
-    <div>
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Export Campaigns</h2>
+
+    <!-- Export Section -->
+    <div id="export-campaign" class="section hidden">
+      <h2 class="text-lg font-semibold text-purple-700 mb-4">Export All Campaigns to Excel</h2>
       <button onclick="exportCampaigns()" class="btn-primary w-full py-2 rounded-md">Download Excel</button>
     </div>
   </div>
@@ -223,7 +280,7 @@
           <div>
             <label class="block text-sm font-medium text-purple-700">Platform</label>
             <select class="channelPlatform p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-              <option value="">Select Platform</option>
+              <option value="">Slt Platform</option>
               <option value="Newspaper">Newspaper</option>
               <option value="Magazine">Magazine</option>
               <option value="Flyers">Flyers</option>
@@ -263,7 +320,7 @@
           <div>
             <label class="block text-sm font-medium text-purple-700">Platform</label>
             <select class="channelPlatform p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
-              <option value="">Select Platform</option>
+              <option value="">Slt Platform</option>
               <option value="Google">Google</option>
               <option value="Facebook">Facebook</option>
               <option value="Instagram">Instagram</option>
@@ -364,7 +421,7 @@
         const removeBtn = document.createElement('button');
         removeBtn.className = 'btn-remove-light';
         removeBtn.type = 'button';
-        removeBtn.style = 'min-width: 150px; padding: 0.5rem 1.5rem; font-size: 1rem; border-radius: 0.375rem; justify-self: center; align-self: end;';
+        removeBtn.style = 'min-width: 100px; padding: 0.5rem 1rem; font-size: 0.875rem; border-radius: 0.375rem; justify-self: center; align-self: end;';
         removeBtn.textContent = 'Remove';
         removeBtn.onclick = function() { removeChannelEntry(removeBtn); };
         fieldsDiv.appendChild(removeBtn);
@@ -379,7 +436,7 @@
         <div class="col-span-1">
           <label class="block text-sm font-medium text-purple-700">Channel Type</label>
           <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
-            <option value="">Select Channel</option>
+            <option value="">Slt Channel</option>
             <option value="Social Media">Social Media</option>
             <option value="Print Media">Print Media</option>
             <option value="Email">Email</option>
@@ -478,6 +535,7 @@
         if (response.ok) {
           document.getElementById('campaignId').value = result.campaignId;
           alert(result.message);
+          clearForm();
           updateCampaignIdAfterSubmit();
         } else {
           alert('Error: ' + result.error);
@@ -487,7 +545,54 @@
       }
     }
 
+    function clearForm() {
+      // Clear basic fields
+      document.getElementById('name').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      document.getElementById('budget').value = '';
+      document.getElementById('status').value = 'Active';
+
+      // Clear target audience
+      document.getElementById('targetAge').value = '';
+      document.getElementById('targetGender').value = 'All';
+      document.getElementById('targetLocation').value = '';
+
+      // Clear goals
+      document.getElementById('goalSales').value = '';
+      document.getElementById('goalImpressions').value = '';
+      document.getElementById('goalConversions').value = '';
+
+      // Clear channels
+      const channelContainer = document.getElementById('channelContainer');
+      channelContainer.innerHTML = '';
+      addChannelEntry(); // Add one empty channel entry
+    }
+
+    function createChannelEntry() {
+      const entry = document.createElement('div');
+      entry.className = 'channelEntry grid grid-cols-6 gap-2 items-end';
+      entry.innerHTML = `
+        <div class="col-span-1">
+          <label class="block text-sm font-medium text-purple-700">Channel Type</label>
+          <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
+            <option value="">Slt Channel</option>
+            <option value="Social Media">Social Media</option>
+            <option value="Print Media">Print Media</option>
+            <option value="Email">Email</option>
+            <option value="Message">Message</option>
+            <option value="Radio">Radio</option>
+            <option value="TV">TV</option>
+          </select>
+        </div>
+        <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
+      `;
+      return entry;
+    }
+
     async function queryCampaign() {
+      console.log('queryCampaign function called');
       const campaignId = document.getElementById('queryCampaignId').value;
       const queryResult = document.getElementById('queryResult');
       const preElement = queryResult.querySelector('pre');
@@ -640,12 +745,14 @@
 
           queryResult.innerHTML = formattedResult;
           queryResult.classList.remove('hidden');
+          console.log('Query successful, result displayed.');
         } else {
           queryResult.innerHTML = `
             <div class="bg-red-50 p-4 rounded-lg border border-red-200">
               <p class="text-red-700">${result.error}</p>
             </div>`;
           queryResult.classList.remove('hidden');
+          console.warn('Query failed, displaying error:', result.error);
         }
       } catch (err) {
         queryResult.innerHTML = `
@@ -653,11 +760,15 @@
             <p class="text-red-700">Error: ${err.message}</p>
           </div>`;
         queryResult.classList.remove('hidden');
+        console.error('Error in queryCampaign:', err);
       }
+        console.log('queryCampaign function finished.');
     }
 
     function exportCampaigns() {
+      console.log('exportCampaigns function called');
       window.location.href = '/api/campaigns/export';
+       console.log('exportCampaigns function finished.');
     }
 
     // Fetch and display the next campaign ID on page load
@@ -690,6 +801,363 @@
     async function updateCampaignIdAfterSubmit() {
       await fetchNextCampaignId();
     }
+
+    // Add new functions for navigation
+    function showSection(sectionId) {
+      console.log(`Attempting to show section: ${sectionId}`);
+      // Hide all sections and clear their content where necessary
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.add('hidden');
+        // Clear content for specific sections
+        if (section.id === 'query-campaign') {
+          console.log('Clearing query section content');
+          section.querySelector('#queryCampaignId').value = '';
+          section.querySelector('#queryResult').classList.add('hidden');
+          section.querySelector('#queryResult').innerHTML = ''; // Clear result HTML
+        } else if (section.id === 'edit-campaign') {
+          console.log('Clearing edit section content');
+          section.querySelector('#editCampaignId').value = '';
+          section.querySelector('#editCampaignForm').classList.add('hidden');
+          section.querySelector('#editCampaignForm').innerHTML = ''; // Clear loaded form
+        } else if (section.id === 'new-campaign') {
+             console.log('Clearing new campaign form');
+             clearForm();
+             fetchNextCampaignId(); // Fetch new ID for the cleared form
+        }
+      });
+      
+      // Show selected section
+      const selectedSection = document.getElementById(sectionId);
+      if (selectedSection) {
+        selectedSection.classList.remove('hidden');
+        console.log(`Section ${sectionId} is now visible.`);
+      } else {
+        console.error(`Section with ID ${sectionId} not found.`);
+      }
+      
+      // Update active state of buttons
+      document.querySelectorAll('.mb-8 .grid button').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-purple-500');
+      });
+      
+      // Find the button that triggers the current section and highlight it by text content
+      const menuButtons = document.querySelectorAll('.mb-8 .grid button');
+      let buttonTextToMatch = '';
+      if (sectionId === 'new-campaign') buttonTextToMatch = 'New Campaign';
+      else if (sectionId === 'edit-campaign') buttonTextToMatch = 'Edit Campaign';
+      else if (sectionId === 'query-campaign') buttonTextToMatch = 'Query Campaign';
+      else if (sectionId === 'export-campaign') buttonTextToMatch = 'Export Campaigns';
+
+      if (buttonTextToMatch) {
+          menuButtons.forEach(button => {
+              // Use textContent and trim for reliable matching
+              if (button.textContent.trim() === buttonTextToMatch) {
+                  button.classList.add('ring-2', 'ring-purple-500');
+                  console.log(`Highlighted button for section: ${sectionId}`);
+              }
+          });
+      } else {
+          console.warn(`No button text defined for sectionId: ${sectionId}`);
+      }
+
+      // Special actions for specific sections when shown
+      if (sectionId === 'new-campaign') {
+         // fetchNextCampaignId is already called when clearing the form
+      } else if (sectionId === 'query-campaign') {
+          // Nothing needed here, query is triggered by button click
+      } else if (sectionId === 'edit-campaign') {
+          // Nothing needed here, load is triggered by button click
+      } else if (sectionId === 'export-campaign') {
+          // Nothing needed here, export is triggered by button click
+      }
+       console.log(`Finished showing section: ${sectionId}`);
+    }
+
+    async function loadCampaignForEdit() {
+      const campaignId = document.getElementById('editCampaignId').value;
+      try {
+        const response = await fetch(`/api/campaigns/${campaignId}`);
+        const result = await response.json();
+        
+        if (response.ok) {
+          // Clone the new campaign form
+          const newCampaignFormTemplate = document.querySelector('#new-campaign .space-y-6');
+          const editFormContainer = document.getElementById('editCampaignForm');
+          
+          // Clear previous content
+          editFormContainer.innerHTML = '';
+
+          // Create a new form element and append cloned children
+          const editForm = document.createElement('div');
+          editForm.className = newCampaignFormTemplate.className; // Copy classes
+          Array.from(newCampaignFormTemplate.children).forEach(child => {
+              editForm.appendChild(child.cloneNode(true));
+          });
+
+          // --- Start: Clear initial channel entries from cloned template ---
+          const channelContainerInClonedForm = editForm.querySelector('#channelContainer');
+          if (channelContainerInClonedForm) {
+              console.log('Clearing channel container in cloned form.', channelContainerInClonedForm.children.length, 'entries before clear.');
+              channelContainerInClonedForm.innerHTML = '';
+              console.log('Channel container in cloned form after clear.', channelContainerInClonedForm.children.length, 'entries.');
+          }
+          // --- End: Clear initial channel entries ---
+          
+          // Fill in the form with campaign data
+          console.log('Calling fillFormWithCampaignData with campaign data:', result);
+          fillFormWithCampaignData(editForm, result);
+          console.log('fillFormWithCampaignData finished.');
+
+          // --- Start: Add one empty channel entry if campaign had none ---
+          console.log('Checking if campaign has channels for conditional add.', result.channels);
+          if (!result.channels || result.channels.length === 0) {
+              console.log('Campaign has no channels, adding one empty channel entry in loadCampaignForEdit.');
+              addChannelEntryInEditForm(editForm);
+          }
+          // --- End: Add initial empty channel entry ---
+
+          // Modify the submit button to handle updates
+          const submitButton = editForm.querySelector('button[onclick="submitCampaign()"]');
+          if (submitButton) {
+             submitButton.onclick = () => submitCampaignUpdate(campaignId);
+             submitButton.textContent = 'Update Campaign';
+          }
+          
+          // Show the form
+          editFormContainer.appendChild(editForm);
+          editFormContainer.classList.remove('hidden');
+
+          // Re-attach event listeners for channel fields in the loaded form
+          editForm.querySelectorAll('.channelType').forEach(select => {
+              select.onchange = () => updateChannelFields(select);
+          });
+
+           // Re-attach event listener for add channel button
+           const addChannelButton = editForm.querySelector('.btn-secondary');
+            if(addChannelButton && addChannelButton.textContent.includes('Add Channel')) {
+                console.log('fillFormWithCampaignData: Re-attaching Add Channel button listener.');
+                addChannelButton.onclick = () => addChannelEntryInEditForm(editForm);
+            }
+
+        } else {
+          alert('Error: ' + result.error);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // A variation of addChannelEntry for the edit form to ensure correct scoping
+    function addChannelEntryInEditForm(editFormElement) {
+        const container = editFormElement.querySelector('#channelContainer');
+        if (!container) return;
+
+        const entry = document.createElement('div');
+        entry.className = 'channelEntry grid grid-cols-6 gap-2 items-end';
+        entry.innerHTML = `
+          <div class="col-span-1">
+            <label class="block text-sm font-medium text-purple-700">Channel Type</label>
+            <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
+              <option value="">Slt Channel</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Print Media">Print Media</option>
+              <option value="Email">Email</option>
+              <option value="Message">Message</option>
+              <option value="Radio">Radio</option>
+              <option value="TV">TV</option>
+            </select>
+          </div>
+          <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
+        `;
+        container.appendChild(entry);
+
+         // Re-attach updateChannelFields listener to the new select
+         const newSelect = entry.querySelector('.channelType');
+         if(newSelect) newSelect.onchange = () => updateChannelFields(newSelect);
+
+         // Re-attach removeChannelEntry listener to the new remove button if it exists
+         const removeBtn = entry.querySelector('.btn-remove-light');
+         if (removeBtn) {
+             removeBtn.onclick = function() { removeChannelEntry(removeBtn); };
+         }
+    }
+
+    async function submitCampaignUpdate(campaignId) {
+      try {
+        // Get the edit form
+        const editForm = document.getElementById('editCampaignForm');
+        if (!editForm) {
+          throw new Error('Edit form not found');
+        }
+
+        // Get all form fields
+        const formData = {
+          campaignId: campaignId,
+          name: editForm.querySelector('#name')?.value || '',
+          description: editForm.querySelector('#description')?.value || '',
+          startDate: editForm.querySelector('#startDate')?.value || '',
+          endDate: editForm.querySelector('#endDate')?.value || '',
+          budget: parseFloat(editForm.querySelector('#budget')?.value) || 0,
+          status: editForm.querySelector('#status')?.value || 'Active',
+          targetAudience: {
+            age: editForm.querySelector('#targetAge')?.value || '',
+            gender: editForm.querySelector('#targetGender')?.value || 'All',
+            location: editForm.querySelector('#targetLocation')?.value || ''
+          },
+          goals: {
+            sales: parseFloat(editForm.querySelector('#goalSales')?.value) || 0,
+            impressions: parseFloat(editForm.querySelector('#goalImpressions')?.value) || 0,
+            conversions: parseFloat(editForm.querySelector('#goalConversions')?.value) || 0
+          },
+          channels: []
+        };
+
+        // Get channel data
+        const channelEntries = editForm.querySelectorAll('.channelEntry');
+        channelEntries.forEach(entry => {
+          const type = entry.querySelector('.channelType')?.value;
+          if (!type) return;
+
+          const channelData = {
+            type,
+            adName: entry.querySelector('.channelAdName')?.value || '',
+            cost: parseFloat(entry.querySelector('.channelCost')?.value) || 0
+          };
+
+          if (type === 'Social Media') {
+            channelData.platform = entry.querySelector('.channelPlatform')?.value || '';
+            channelData.adType = entry.querySelector('.channelAdType')?.value || '';
+          } else if (type === 'TV' || type === 'Radio') {
+            channelData.network = entry.querySelector('.channelNetwork')?.value || '';
+            channelData.startDate = entry.querySelector('.channelStartDate')?.value || '';
+            channelData.endDate = entry.querySelector('.channelEndDate')?.value || '';
+          } else if (type === 'Print Media') {
+            channelData.platform = entry.querySelector('.channelPlatform')?.value || '';
+            channelData.publication = entry.querySelector('.channelPublication')?.value || '';
+            channelData.startDate = entry.querySelector('.channelStartDate')?.value || '';
+            channelData.endDate = entry.querySelector('.channelEndDate')?.value || '';
+            channelData.area = entry.querySelector('.channelArea')?.value || '';
+            channelData.qty = parseInt(entry.querySelector('.channelQty')?.value) || 0;
+          } else if (type === 'Email' || type === 'Message') {
+            channelData.qty = parseInt(entry.querySelector('.channelQty')?.value) || 0;
+          }
+
+          formData.channels.push(channelData);
+        });
+
+        console.log('Sending update request with data:', formData);
+
+        const response = await fetch(`/api/campaigns/${campaignId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server response:', errorText);
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.error || 'Failed to update campaign');
+          } catch (e) {
+            throw new Error('Server returned an error: ' + errorText);
+          }
+        }
+
+        const result = await response.json();
+        alert('Campaign updated successfully');
+        showSection('query-campaign');
+        document.getElementById('queryCampaignId').value = campaignId;
+        queryCampaign();
+      } catch (err) {
+        console.error('Update error:', err);
+        alert('Error: ' + err.message);
+      }
+    }
+
+    function fillFormWithCampaignData(form, campaign) {
+      // Fill in basic fields
+      form.querySelector('#campaignId').value = campaign.campaignId;
+      form.querySelector('#name').value = campaign.name || '';
+      form.querySelector('#description').value = campaign.description || '';
+      form.querySelector('#startDate').value = campaign.startDate || '';
+      form.querySelector('#endDate').value = campaign.endDate || '';
+      form.querySelector('#budget').value = campaign.budget || '';
+      form.querySelector('#status').value = campaign.status || 'Active';
+
+      // Fill in target audience
+      if (campaign.targetAudience) {
+        form.querySelector('#targetAge').value = campaign.targetAudience.age || '';
+        form.querySelector('#targetGender').value = campaign.targetAudience.gender || 'All';
+        form.querySelector('#targetLocation').value = campaign.targetAudience.location || '';
+      }
+
+      // Fill in goals
+      if (campaign.goals) {
+        form.querySelector('#goalSales').value = campaign.goals.sales || '';
+        form.querySelector('#goalImpressions').value = campaign.goals.impressions || '';
+        form.querySelector('#goalConversions').value = campaign.goals.conversions || '';
+      }
+
+      // Fill in channels
+      const channelContainer = form.querySelector('#channelContainer');
+      if (!channelContainer) {
+        console.error('#channelContainer not found in form.');
+        return; // Ensure container exists
+      }
+
+      console.log('fillFormWithCampaignData: Clearing channel container.', channelContainer.children.length, 'entries before clear.');
+      channelContainer.innerHTML = ''; // Clear existing channels from the cloned template (redundant due to loadCampaignForEdit, but safe)
+      console.log('fillFormWithCampaignData: Channel container after clear.', channelContainer.children.length, 'entries.');
+
+
+      console.log('fillFormWithCampaignData: Checking campaign.channels:', campaign.channels);
+
+      if (campaign.channels && campaign.channels.length > 0) {
+        console.log('fillFormWithCampaignData: Campaign has channels, adding them.', campaign.channels.length, 'channels.');
+        campaign.channels.forEach(channel => {
+          console.log('fillFormWithCampaignData: Adding channel type:', channel.type);
+          const channelEntry = createChannelEntry(); // Use the generic create function
+          const typeSelect = channelEntry.querySelector('.channelType');
+          if (typeSelect) {
+             typeSelect.value = channel.type;
+             updateChannelFields(typeSelect);
+          }
+          
+          // Fill in channel-specific fields
+          Object.keys(channel).forEach(key => {
+            // Use querySelector within the channelEntry to find the input
+            // Replace spaces and non-alphanumeric characters for robust class selection
+            const input = channelEntry.querySelector(`.channel${key.replace(/[^a-zA-Z0-9]/g, '').replace(/^./, char => char.toUpperCase())}`);
+            if (input) input.value = channel[key];
+          });
+          
+          channelContainer.appendChild(channelEntry);
+        });
+         console.log('fillFormWithCampaignData: Finished adding channels.', channelContainer.children.length, 'entries now.');
+
+      } else {
+         console.log('fillFormWithCampaignData: Campaign has no channels.');
+         // If no channels exist in the campaign data, do NOT add a channel here.
+         // The initial empty channel will be added in loadCampaignForEdit if needed.
+      }
+
+       // Ensure Add Channel button works after filling
+       const addChannelButton = form.querySelector('.btn-secondary');
+        if(addChannelButton && addChannelButton.textContent.includes('Add Channel')) {
+            console.log('fillFormWithCampaignData: Re-attaching Add Channel button listener.');
+            addChannelButton.onclick = () => addChannelEntryInEditForm(form);
+        }
+    }
+
+    // Show new campaign section by default
+    window.addEventListener('DOMContentLoaded', () => {
+      showSection('new-campaign');
+      fetchNextCampaignId();
+    });
   </script>
 </body>
 </html>

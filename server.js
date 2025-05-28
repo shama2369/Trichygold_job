@@ -13,60 +13,15 @@ const uri = process.env.MONGO_URI;
 
 let db;
 
-async function setupDatabase() {
-  const client = new MongoClient(uri, {
-    ssl: true,
-    serverSelectionTimeoutMS: 5000,
-    connectTimeoutMS: 10000,
-    tlsAllowInvalidCertificates: false,
-    tlsAllowInvalidHostnames: false,
-  });
-
-  let retries = 3;
-  while (retries > 0) {
-    try {
-      console.log(`Attempting to connect to MongoDB (Retries left: ${retries})...`);
-      await client.connect();
-      console.log('Connected to MongoDB');
-      db = client.db('event_campaign_db');
-      const campaigns = db.collection('campaigns');
-      await campaigns.createIndex({ campaignId: 1 }, { unique: true });
-      console.log('Unique index on campaignId created');
-      return;
-    } catch (err) {
-      console.error(`MongoDB connection failed (Attempt ${4 - retries}):`, err.message);
-      retries -= 1;
-      if (retries === 0) {
-        console.error('All MongoDB connection retries failed');
-        throw err;
-      }
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-  }
-}
-
-// Generate Campaign ID
-async function generateCampaignId() {
-  try {
-    const campaigns = db.collection('campaigns');
-    const lastCampaign = await campaigns.find().sort({ campaignId: -1 }).limit(1).toArray();
-    let nextId = 1;
-    if (lastCampaign.length > 0) {
-      const lastId = lastCampaign[0].campaignId;
-      const number = parseInt(lastId.replace('CAMP_', '')) + 1;
-      nextId = number;
-    }
-    return `CAMP_${nextId.toString().padStart(4, '0')}`;
-  } catch (err) {
-    console.error('Error generating campaignId:', err);
-    throw err;
-  }
-}
-
-// Middleware
+// Middleware setup - order is important
 app.use(bodyParser.json());
-app.use(express.static('.')); // Serve index.html
-app.use('/public', express.static(path.join(__dirname, 'public'))); // Serve styles.css
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// API routes should come before static file serving
+app.use('/api', (req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
@@ -96,12 +51,67 @@ app.post('/api/campaigns', async (req, res) => {
   }
 });
 
+// PUT: Update campaign
+app.put('/api/campaigns/:campaignId', async (req, res) => {
+  try {
+    const campaignId = req.params.campaignId;
+    const campaignData = req.body;
+    
+    if (!campaignData) {
+      return res.status(400).json({ error: 'No campaign data provided' });
+    }
+    
+    // Ensure the campaignId in the URL matches the one in the body
+    if (campaignData.campaignId !== campaignId) {
+      return res.status(400).json({ error: 'Campaign ID mismatch' });
+    }
+    
+    const campaigns = db.collection('campaigns');
+    const result = await campaigns.updateOne(
+      { campaignId },
+      { $set: campaignData },
+      { upsert: false }
+    );
+    
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    
+    return res.status(200).json({ 
+      message: 'Campaign updated successfully', 
+      campaignId 
+    });
+  } catch (err) {
+    console.error('Error updating campaign:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET: Retrieve all campaigns
+app.get('/api/campaigns', async (req, res) => {
+  console.log('Received GET request for all campaigns (/api/campaigns)');
+  try {
+    const campaigns = db.collection('campaigns');
+    const allCampaigns = await campaigns.find().toArray();
+    res.status(200).json(allCampaigns);
+  } catch (err) {
+    console.error('Error retrieving campaigns:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET: Export all campaigns to Excel
 app.get('/api/campaigns/export', async (req, res) => {
+  console.log('Received GET request for Excel export (/api/campaigns/export)');
   try {
     const campaigns = db.collection('campaigns');
     const data = await campaigns.find().toArray();
     
+    if (data.length === 0) {
+        console.log('No campaigns found for export.');
+        return res.status(404).json({ error: 'No campaigns found to export' });
+    }
+
     const workbook = new excel.Workbook();
     const worksheet = workbook.addWorksheet('Campaigns');
     
@@ -152,20 +162,9 @@ app.get('/api/campaigns/export', async (req, res) => {
   }
 });
 
-// GET: Retrieve all campaigns
-app.get('/api/campaigns', async (req, res) => {
-  try {
-    const campaigns = db.collection('campaigns');
-    const allCampaigns = await campaigns.find().toArray();
-    res.status(200).json(allCampaigns);
-  } catch (err) {
-    console.error('Error retrieving campaigns:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // GET: Query campaigns by campaignId
 app.get('/api/campaigns/:campaignId', async (req, res) => {
+  console.log(`Received GET request for campaignId: ${req.params.campaignId}`);
   try {
     const campaignId = req.params.campaignId;
     const campaigns = db.collection('campaigns');
@@ -180,6 +179,79 @@ app.get('/api/campaigns/:campaignId', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Static file serving should come after API routes
+app.use(express.static('.'));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  if (req.path.startsWith('/api/')) {
+    res.status(500).json({ error: 'Server error' });
+  } else {
+    res.status(500).send('Server error');
+  }
+});
+
+// 404 handler
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    res.status(404).json({ error: 'Not found' });
+  } else {
+    res.status(404).sendFile(path.join(__dirname, 'index.html'));
+  }
+});
+
+async function setupDatabase() {
+  const client = new MongoClient(uri, {
+    ssl: true,
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+    tlsAllowInvalidCertificates: false,
+    tlsAllowInvalidHostnames: false,
+  });
+
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      console.log(`Attempting to connect to MongoDB (Retries left: ${retries})...`);
+      await client.connect();
+      console.log('Connected to MongoDB');
+      db = client.db('event_campaign_db');
+      const campaigns = db.collection('campaigns');
+      await campaigns.createIndex({ campaignId: 1 }, { unique: true });
+      console.log('Unique index on campaignId created');
+      return;
+    } catch (err) {
+      console.error(`MongoDB connection failed (Attempt ${4 - retries}):`, err.message);
+      retries -= 1;
+      if (retries === 0) {
+        console.error('All MongoDB connection retries failed');
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
+}
+
+// Generate Campaign ID
+async function generateCampaignId() {
+  try {
+    const campaigns = db.collection('campaigns');
+    const lastCampaign = await campaigns.find().sort({ campaignId: -1 }).limit(1).toArray();
+    let nextId = 1;
+    if (lastCampaign.length > 0) {
+      const lastId = lastCampaign[0].campaignId;
+      const number = parseInt(lastId.replace('CAMP_', '')) + 1;
+      nextId = number;
+    }
+    return `CAMP_${nextId.toString().padStart(4, '0')}`;
+  } catch (err) {
+    console.error('Error generating campaignId:', err);
+    throw err;
+  }
+}
 
 // Initialize database and start server
 async function startServer() {
