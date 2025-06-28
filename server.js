@@ -12,7 +12,6 @@ const port = process.env.PORT || 3000;
 const uri = process.env.MONGO_URI;
 
 let db;
-
 // Middleware setup - order is important
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -101,6 +100,65 @@ app.get('/api/campaigns', async (req, res) => {
 });
 
 // GET: Export all campaigns to Excel
+// GET: Export a single campaign to Excel
+app.get('/api/campaigns/:campaignId/export', async (req, res) => {
+  const campaignId = req.params.campaignId;
+  try {
+    const campaigns = db.collection('campaigns');
+    const campaign = await campaigns.findOne({ campaignId });
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    const workbook = new excel.Workbook();
+    const worksheet = workbook.addWorksheet('Campaigns');
+    worksheet.columns = [
+      { header: 'Campaign ID', key: 'campaignId', width: 15 },
+      { header: 'Name', key: 'name', width: 20 },
+      { header: 'Description', key: 'description', width: 30 },
+      { header: 'Start Date', key: 'startDate', width: 15 },
+      { header: 'End Date', key: 'endDate', width: 15 },
+      { header: 'Budget (AED)', key: 'budget', width: 10 },
+      { header: 'Status', key: 'status', width: 10 },
+      { header: 'Channels', key: 'channels', width: 50 },
+    ];
+
+    // Format channels as readable string (same as all-campaigns export)
+    let channelDetails = '';
+    if (campaign.channels && Array.isArray(campaign.channels)) {
+      channelDetails = campaign.channels.map(channel => {
+        if (channel.type === 'Social Media') {
+          return `Social Media: ${channel.platform}, ${channel.adName}, ${channel.cost} AED, ${channel.adType}`;
+        } else if (channel.type === 'TV') {
+          return `TV: ${channel.network || ''}, ${channel.adName}, ${channel.cost} AED`;
+        } else if (channel.type === 'Print Media') {
+          return `Print Media: ${channel.publication}, ${channel.adName}, ${channel.cost} AED`;
+        } else if (channel.type === 'Radio') {
+          return `Radio: ${channel.station || ''}, ${channel.adName}, ${channel.cost} AED`;
+        }
+        return '';
+      }).join('; ');
+    }
+
+    worksheet.addRow({
+      campaignId: campaign.campaignId,
+      name: campaign.name,
+      description: campaign.description,
+      startDate: campaign.startDate,
+      endDate: campaign.endDate,
+      budget: campaign.budget,
+      status: campaign.status,
+      channels: channelDetails,
+    });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=campaign_${campaignId}.xlsx`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Error exporting campaign:', err);
+    res.status(500).json({ error: 'Server error during export' });
+  }
+});
+
 app.get('/api/campaigns/export', async (req, res) => {
   console.log('Received GET request for Excel export (/api/campaigns/export)');
   try {
