@@ -161,27 +161,33 @@
                 </div>
                 <div>
                   <label for="targetCategory" class="block text-sm font-medium text-purple-700">Category</label>
-<select id="targetCategory" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-  <option value="">Select Category</option>
-  <option>Tourist</option>
-  <option>Resident</option>
-  <option>All Walkin</option>
-  <option>Social Media</option>
-  <option>Social Groups</option>
-  <option>Corporates</option>
-  <option>Residential Cmty</option>
-  <option>Local Cmty</option>
-  <option>Blue collar wrkrs</option>
-  <option>Existing cutomers</option>
-  <option>HNTW</option>
-  <option>Hotels</option>
-  <option>Tourism Companies</option>
-  <option>Tour Drivers</option>
-  <option>Other Tours Assctd cmpy</option>
-  <option>Dgjg</option>
-  <option>Festival & Occasion Buyers</option>
-  <option>Product Launch</option>
-</select>
+                  <div id="targetCategoryContainer">
+                    <div class="targetCategorySelect mb-2 flex items-center gap-2">
+                      <select class="targetCategory w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Select Category</option>
+                        <option>Tourist</option>
+                        <option>Resident</option>
+                        <option>All Walkin</option>
+                        <option>Social Media</option>
+                        <option>Social Groups</option>
+                        <option>Corporates</option>
+                        <option>Residential Cmty</option>
+                        <option>Local Cmty</option>
+                        <option>Blue collar wrkrs</option>
+                        <option>Existing cutomers</option>
+                        <option>HNTW</option>
+                        <option>Hotels</option>
+                        <option>Tourism Companies</option>
+                        <option>Tour Drivers</option>
+                        <option>Other Tours Assctd cmpy</option>
+                        <option>Dgjg</option>
+                        <option>Festival & Occasion Buyers</option>
+                        <option>Product Launch</option>
+                      </select>
+                      <button type="button" class="removeCategoryBtn hidden text-red-500">✕</button>
+                    </div>
+                  </div>
+                  <button type="button" id="addCategoryBtn" class="btn-secondary py-1 px-3 rounded-md mb-2">Add Category</button>
                 </div>
               </div>
             </div>
@@ -216,11 +222,12 @@
                       <option value="">Slt Channel</option>
                       <option value="Social Media">Social Media</option>
                       <option value="Print Media">Print Media</option>
+                      <option value="Outdoor Events">Outdoor Events</option>
                       <option value="Email">Email</option>
                       <option value="Message">Message</option>
                       <option value="Radio">Radio</option>
                       <option value="TV">TV</option>
-<option value="Outdoor Events">Outdoor Events</option>
+                      <option value="Promotional Items">Promotional Items</option>
                     </select>
                   </div>
                   <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
@@ -461,6 +468,17 @@
             <input type="date" class="channelEndDate p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
           </div>
         `;
+      } else if (type === 'Promotional Items') {
+        html = `
+          <div>
+            <label class="block text-sm font-medium text-purple-700">Item Name</label>
+            <input type="text" class="channelAdName p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-purple-700">Cost (AED)</label>
+            <input type="number" class="channelCost p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
+          </div>
+        `;
       }
 
       // Insert new fields
@@ -497,6 +515,7 @@
             <option value="Email">Email</option>
             <option value="Message">Message</option>
             <option value="Radio">Radio</option>
+            <option value="Promotional Items">Promotional Items</option>
             <option value="TV">TV</option>
           </select>
         </div>
@@ -562,9 +581,18 @@
             cost: parseFloat(entry.querySelector('.channelCost').value) || 0,
             venue: entry.querySelector('.channelVenue').value,
           };
+        } else if (type === 'Promotional Items') {
+          return {
+            type,
+            adName: entry.querySelector('.channelAdName').value,
+            cost: parseFloat(entry.querySelector('.channelCost').value) || 0,
+          };
         }
         return null;
       }).filter(channel => channel);
+
+      const categorySelects = document.querySelectorAll('.targetCategory');
+      const categories = Array.from(categorySelects).map(sel => sel.value).filter(val => val);
 
       const campaignData = {
         campaignId: document.getElementById('campaignId').value,
@@ -577,7 +605,7 @@
         targetAudience: {
           age: document.getElementById('targetAge').value,
           gender: document.getElementById('targetGender').value,
-          category: document.getElementById('targetCategory').value,
+          categories: categories
         },
         goals: {
           sales: parseFloat(document.getElementById('goalSales').value) || 0,
@@ -619,7 +647,35 @@
       // Clear target audience
       document.getElementById('targetAge').value = '';
       document.getElementById('targetGender').value = 'All';
-      document.getElementById('targetCategory').value = '';
+      const catContainer = document.getElementById('targetCategoryContainer');
+      if (catContainer) {
+        catContainer.innerHTML = '';
+        // Add one empty select
+        const div = document.createElement('div');
+        div.className = 'targetCategorySelect mb-2 flex items-center gap-2';
+        div.innerHTML = `<select class="targetCategory w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+          <option value="">Select Category</option>
+          <option>Tourist</option>
+          <option>Resident</option>
+          <option>All Walkin</option>
+          <option>Social Media</option>
+          <option>Social Groups</option>
+          <option>Corporates</option>
+          <option>Residential Cmty</option>
+          <option>Local Cmty</option>
+          <option>Blue collar wrkrs</option>
+          <option>Existing cutomers</option>
+          <option>HNTW</option>
+          <option>Hotels</option>
+          <option>Tourism Companies</option>
+          <option>Tour Drivers</option>
+          <option>Other Tours Assctd cmpy</option>
+          <option>Dgjg</option>
+          <option>Festival & Occasion Buyers</option>
+          <option>Product Launch</option>
+        </select><button type="button" class="removeCategoryBtn hidden text-red-500">✕</button>`;
+        catContainer.appendChild(div);
+      }
 
       // Clear goals
       document.getElementById('goalSales').value = '';
@@ -630,28 +686,6 @@
       const channelContainer = document.getElementById('channelContainer');
       channelContainer.innerHTML = '';
       addChannelEntry(); // Add one empty channel entry
-    }
-
-    function createChannelEntry() {
-      const entry = document.createElement('div');
-      entry.className = 'channelEntry grid grid-cols-6 gap-2 items-end';
-      entry.innerHTML = `
-        <div class="col-span-1">
-          <label class="block text-sm font-medium text-purple-700">Channel Type</label>
-          <select class="channelType p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full" onchange="updateChannelFields(this)">
-            <option value="">Slt Channel</option>
-            <option value="Social Media">Social Media</option>
-            <option value="Print Media">Print Media</option>
-            <option value="Outdoor Events">Outdoor Events</option>
-            <option value="Email">Email</option>
-            <option value="Message">Message</option>
-            <option value="Radio">Radio</option>
-            <option value="TV">TV</option>
-          </select>
-        </div>
-        <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
-      `;
-      return entry;
     }
 
     async function queryCampaign() {
@@ -665,12 +699,12 @@
         const result = await response.json();
         
         if (response.ok) {
-      // Show the queryResult div
-      queryResult.classList.remove('hidden');
-      // Show the Download as Excel button
-      const excelBtn = document.getElementById('downloadExcelBtn');
-      if (excelBtn) excelBtn.classList.remove('hidden');
-      let formattedResult = `
+          // Show the queryResult div
+          queryResult.classList.remove('hidden');
+          // Show the Download as Excel button
+          const excelBtn = document.getElementById('downloadExcelBtn');
+          if (excelBtn) excelBtn.classList.remove('hidden');
+          let formattedResult = `
             <div class="space-y-6">
               <!-- Basic Information -->
               <div class="bg-white p-4 rounded-lg border border-gray-200">
@@ -724,7 +758,7 @@
                   </div>
                   <div>
                     <p class="text-sm font-medium text-gray-600">Category</p>
-                    <p class="text-base text-gray-900">${result.targetAudience.category || 'N/A'}</p>
+                    <p class="text-base text-gray-900">${result.targetAudience.categories.join(', ') || 'N/A'}</p>
                   </div>
                 </div>
               </div>` : ''}
@@ -1037,7 +1071,8 @@
               <option value="Message">Message</option>
               <option value="Radio">Radio</option>
               <option value="TV">TV</option>
-<option value="Outdoor Events">Outdoor Events</option>
+              <option value="Outdoor Events">Outdoor Events</option>
+              <option value="Promotional Items">Promotional Items</option>
             </select>
           </div>
           <div class="channelFields grid grid-cols-4 gap-2 col-span-4"></div>
@@ -1063,6 +1098,10 @@
           throw new Error('Edit form not found');
         }
 
+        // Gather all categories
+        const categorySelects = editForm.querySelectorAll('.targetCategory');
+        const categories = Array.from(categorySelects).map(sel => sel.value).filter(val => val);
+
         // Get all form fields
         const formData = {
           campaignId: campaignId,
@@ -1075,12 +1114,12 @@
           targetAudience: {
             age: editForm.querySelector('#targetAge')?.value || '',
             gender: editForm.querySelector('#targetGender')?.value || 'All',
-            category: editForm.querySelector('#targetCategory')?.value || ''
+            categories: categories
           },
           goals: {
             sales: parseFloat(editForm.querySelector('#goalSales')?.value) || 0,
             impressions: parseFloat(editForm.querySelector('#goalImpressions')?.value) || 0,
-            conversions: parseFloat(editForm.querySelector('#goalConversions')?.value) || 0
+            conversions: parseFloat(editForm.querySelector('#goalConversions')?.value) || 0,
           },
           channels: []
         };
@@ -1088,7 +1127,7 @@
         // Get channel data
         const channelEntries = editForm.querySelectorAll('.channelEntry');
         channelEntries.forEach(entry => {
-          const type = entry.querySelector('.channelType')?.value;
+          const type = entry.querySelector('.channelType').value;
           if (!type) return;
 
           const channelData = {
@@ -1112,6 +1151,8 @@
             channelData.area = entry.querySelector('.channelArea')?.value || '';
             channelData.qty = parseInt(entry.querySelector('.channelQty')?.value) || 0;
           } else if (type === 'Email' || type === 'Message') {
+            channelData.qty = parseInt(entry.querySelector('.channelQty')?.value) || 0;
+          } else if (type === 'Promotional Items') {
             channelData.qty = parseInt(entry.querySelector('.channelQty')?.value) || 0;
           }
 
@@ -1163,6 +1204,41 @@
 
       // Fill in target audience
       if (campaign.targetAudience) {
+        form.querySelector('#targetAge').value = campaign.targetAudience.age || '';
+        form.querySelector('#targetGender').value = campaign.targetAudience.gender || 'All';
+        const catContainer = form.querySelector('#targetCategoryContainer');
+        if (catContainer) {
+          catContainer.innerHTML = '';
+          if (Array.isArray(campaign.targetAudience.categories)) {
+            campaign.targetAudience.categories.forEach((cat, idx) => {
+              const div = document.createElement('div');
+              div.className = 'targetCategorySelect mb-2 flex items-center gap-2';
+              div.innerHTML = `<select class="targetCategory w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <option value="">Select Category</option>
+                <option${cat==='Tourist'?' selected':''}>Tourist</option>
+                <option${cat==='Resident'?' selected':''}>Resident</option>
+                <option${cat==='All Walkin'?' selected':''}>All Walkin</option>
+                <option${cat==='Social Media'?' selected':''}>Social Media</option>
+                <option${cat==='Social Groups'?' selected':''}>Social Groups</option>
+                <option${cat==='Corporates'?' selected':''}>Corporates</option>
+                <option${cat==='Residential Cmty'?' selected':''}>Residential Cmty</option>
+                <option${cat==='Local Cmty'?' selected':''}>Local Cmty</option>
+                <option${cat==='Blue collar wrkrs'?' selected':''}>Blue collar wrkrs</option>
+                <option${cat==='Existing cutomers'?' selected':''}>Existing cutomers</option>
+                <option${cat==='HNTW'?' selected':''}>HNTW</option>
+                <option${cat==='Hotels'?' selected':''}>Hotels</option>
+                <option${cat==='Tourism Companies'?' selected':''}>Tourism Companies</option>
+                <option${cat==='Tour Drivers'?' selected':''}>Tour Drivers</option>
+                <option${cat==='Other Tours Assctd cmpy'?' selected':''}>Other Tours Assctd cmpy</option>
+                <option${cat==='Dgjg'?' selected':''}>Dgjg</option>
+                <option${cat==='Festival & Occasion Buyers'?' selected':''}>Festival & Occasion Buyers</option>
+                <option${cat==='Product Launch'?' selected':''}>Product Launch</option>
+              </select><button type="button" class="removeCategoryBtn text-red-500">✕</button>`;
+              catContainer.appendChild(div);
+            });
+          }
+        }
+      } else {
         form.querySelector('#targetAge').value = campaign.targetAudience.age || '';
         form.querySelector('#targetGender').value = campaign.targetAudience.gender || 'All';
         form.querySelector('#targetCategory').value = campaign.targetAudience.category || '';
@@ -1230,6 +1306,57 @@
     window.addEventListener('DOMContentLoaded', () => {
       showSection('new-campaign');
       fetchNextCampaignId();
+    });
+    // --- CATEGORY DYNAMIC ADD/REMOVE ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add Category button logic
+      const addCatBtn = document.getElementById('addCategoryBtn');
+      if (addCatBtn) {
+        addCatBtn.onclick = function() {
+          const catContainer = document.getElementById('targetCategoryContainer');
+          const div = document.createElement('div');
+          div.className = 'targetCategorySelect mb-2 flex items-center gap-2';
+          div.innerHTML = `<select class=\"targetCategory w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500\">
+            <option value=\"\">Select Category</option>
+            <option>Tourist</option>
+            <option>Resident</option>
+            <option>All Walkin</option>
+            <option>Social Media</option>
+            <option>Social Groups</option>
+            <option>Corporates</option>
+            <option>Residential Cmty</option>
+            <option>Local Cmty</option>
+            <option>Blue collar wrkrs</option>
+            <option>Existing cutomers</option>
+            <option>HNTW</option>
+            <option>Hotels</option>
+            <option>Tourism Companies</option>
+            <option>Tour Drivers</option>
+            <option>Other Tours Assctd cmpy</option>
+            <option>Dgjg</option>
+            <option>Festival & Occasion Buyers</option>
+            <option>Product Launch</option>
+          </select><button type=\"button\" class=\"removeCategoryBtn text-red-500\">✕</button>`;
+          catContainer.appendChild(div);
+          updateRemoveCategoryBtns();
+        };
+      }
+      function updateRemoveCategoryBtns() {
+        const btns = document.querySelectorAll('.removeCategoryBtn');
+        btns.forEach(btn => {
+          btn.classList.remove('hidden');
+          btn.onclick = function() {
+            btn.parentElement.remove();
+            // Hide remove button if only one left
+            if (document.querySelectorAll('.targetCategorySelect').length === 1) {
+              document.querySelector('.removeCategoryBtn').classList.add('hidden');
+            }
+          };
+        });
+        // Hide remove button if only one select
+        if (btns.length === 1) btns[0].classList.add('hidden');
+      }
+      updateRemoveCategoryBtns();
     });
   </script>
 </body>
