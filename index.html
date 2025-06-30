@@ -1056,7 +1056,7 @@
     // A variation of addChannelEntry for the edit form to ensure correct scoping
     function addChannelEntryInEditForm(editFormElement) {
         const container = editFormElement.querySelector('#channelContainer');
-        if (!container) return;
+        if (!container) return null;
 
         const entry = document.createElement('div');
         entry.className = 'channelEntry grid grid-cols-6 gap-2 items-end';
@@ -1088,6 +1088,8 @@
          if (removeBtn) {
              removeBtn.onclick = function() { removeChannelEntry(removeBtn); };
          }
+
+        return entry;
     }
 
     async function submitCampaignUpdate(campaignId) {
@@ -1269,7 +1271,7 @@
         console.log('fillFormWithCampaignData: Campaign has channels, adding them.', campaign.channels.length, 'channels.');
         campaign.channels.forEach(channel => {
           console.log('fillFormWithCampaignData: Adding channel type:', channel.type);
-          const channelEntry = createChannelEntry(); // Use the generic create function
+          const channelEntry = (typeof addChannelEntryInEditForm === 'function') ? addChannelEntryInEditForm(form) : null; // Use the correct function for edit form
           const typeSelect = channelEntry.querySelector('.channelType');
           if (typeSelect) {
              typeSelect.value = channel.type;
