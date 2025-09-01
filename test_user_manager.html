@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trichy Gold - User Manager Test</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #E9D8FD, #D6BCFA);
+      min-height: 100vh;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    .card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 1200px;
+      padding: 2rem;
+      position: relative;
+    }
+    .btn-primary {
+      background-color: #6B46C1;
+      color: white;
+      transition: background-color 0.3s;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      background-color: #553C9A;
+    }
+    .btn-secondary {
+      background-color: #9F7AEA;
+      color: white;
+      transition: background-color 0.3s;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background-color: #805AD5;
+    }
+    .crm-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .crm-table th, .crm-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .crm-table th {
+      background-color: #F8FAFC;
+      font-weight: 600;
+    }
+    .crm-table tr:last-child td {
+      border-bottom: none;
+    }
+    .crm-table tr:hover {
+      background-color: #F1F5F9;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .section {
+      border: 2px dashed transparent;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .section:not(.hidden) {
+      border-color: #6B46C1;
+    }
+    .debug-info {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Debug info -->
+  <div class="debug-info">
+    Card size: <span id="card-size"></span><br>
+    User manager position: <span id="user-manager-pos"></span>
+  </div>
+
+  <!-- MAIN CARD - ALL CONTENT GOES INSIDE THIS DIV -->
+  <div class="card" id="main-card">
+    <h1 class="text-2xl font-bold text-center text-purple-700 mb-6">Trichy Gold Campaign Manager</h1>
+    
+    <!-- Main Menu -->
+    <div class="mb-8">
+      <div class="flex" style="display: flex; gap: 10px; justify-content: center;">
+        <button onclick="showSection('campaigns-table')" class="btn-primary">
+          Campaigns Table
+        </button>
+        <button onclick="showSection('user-manager')" class="btn-secondary">
+          User & Role Manager
+        </button>
+      </div>
+    </div>
+    
+    <!-- Campaigns Table Section -->
+    <div id="campaigns-table" class="section">
+      <h2 style="font-size: 1.5rem; font-weight: 600; color: #6B46C1; margin-bottom: 1rem;">Campaigns</h2>
+      <div style="background-color: #f9f9f9; padding: 2rem; border-radius: 0.5rem; text-align: center;">
+        Campaigns Table Content
+      </div>
+    </div>
+    
+    <!-- User & Role Manager Section -->
+    <div id="user-manager" class="section hidden">
+      <h2 style="font-size: 1.5rem; font-weight: 600; color: #6B46C1; margin-bottom: 1rem;">Users</h2>
+      <button id="addUserBtn" class="btn-primary" style="margin-bottom: 1rem;">Add User</button>
+      <table class="crm-table" style="width: 100%;">
+        <thead>
+          <tr>
+            <th style="padding: 0.75rem; text-align: left; background-color: #F8FAFC;">Username</th>
+            <th style="padding: 0.75rem; text-align: left; background-color: #F8FAFC;">Role</th>
+            <th style="padding: 0.75rem; text-align: left; background-color: #F8FAFC;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body">
+          <tr>
+            <td><b>testuser</b></td>
+            <td>admin</td>
+            <td>
+              <button style="background:#FFC107;color:#222;font-weight:bold;border:none;padding:6px 18px;border-radius:6px;cursor:pointer;margin-right:6px;">Edit</button>
+              <button style="background:#EF4444;color:white;font-weight:bold;border:none;padding:6px 18px;border-radius:6px;cursor:pointer;">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- User Create Section -->
+    <div id="user-create-section" class="section hidden">
+      <h2 style="font-size: 1.5rem; font-weight: 600; color: #6B46C1; margin-bottom: 1rem;">Create New User</h2>
+      <button id="backToUsersBtn" class="btn-secondary" style="margin-bottom: 1rem;">&larr; Back to Users</button>
+      <div style="width: 100%; max-width: 500px; margin: 0 auto;">
+        <form id="createUserForm" style="display: grid; grid-gap: 1rem; background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <div>
+            <label for="newUserUsername" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Username</label>
+            <input id="newUserUsername" name="username" type="text" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.375rem;">
+          </div>
+          <div>
+            <label for="newUserPassword" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Password</label>
+            <input id="newUserPassword" name="password" type="password" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.375rem;">
+          </div>
+          <div>
+            <label for="newUserRoles" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Role</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <select id="newUserRoles" name="roles" style="flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.375rem;">
+                <option value="admin">Admin</option>
+                <option value="editor">Editor</option>
+                <option value="viewer">Viewer</option>
+              </select>
+              <button type="button" id="manageRolesBtn" class="btn-secondary">Manage Roles</button>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+            <button type="submit" class="btn-primary">Create User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Function to show a section and hide others
+    function showSection(sectionId) {
+      console.log(`Showing section: ${sectionId}`);
+      
+      // Hide all sections
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.add('hidden');
+      });
+      
+      // Show the requested section
+      const sectionToShow = document.getElementById(sectionId);
+      if (sectionToShow) {
+        sectionToShow.classList.remove('hidden');
+        console.log(`Section ${sectionId} is now visible`);
+      } else {
+        console.error(`Section ${sectionId} not found`);
+      }
+      
+      // Update debug info
+      updateDebugInfo();
+    }
+    
+    // Add User button click handler
+    document.getElementById('addUserBtn').addEventListener('click', function() {
+      showSection('user-create-section');
+    });
+    
+    // Back to Users button click handler
+    document.getElementById('backToUsersBtn').addEventListener('click', function() {
+      showSection('user-manager');
+    });
+    
+    // Update debug information
+    function updateDebugInfo() {
+      const card = document.getElementById('main-card');
+      const userManager = document.getElementById('user-manager');
+      
+      document.getElementById('card-size').textContent = 
+        `${card.offsetWidth}x${card.offsetHeight}`;
+      
+      document.getElementById('user-manager-pos').textContent = 
+        userManager.classList.contains('hidden') ? 'Hidden' : 
+        `Inside card: ${card.contains(userManager)}`;
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      showSection('campaigns-table');
+      updateDebugInfo();
+    });
+  </script>
+</body>
+</html>

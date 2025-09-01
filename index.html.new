@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trichy Gold Campaigns</title>
+  <link rel="stylesheet" href="/public/styles.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #E9D8FD, #D6BCFA);
+      min-height: 100vh;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    .card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 1200px;
+      padding: 2rem;
+    }
+    .btn-primary {
+      background-color: #6B46C1;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .btn-primary:hover {
+      background-color: #553C9A;
+    }
+    .btn-secondary {
+      background-color: #9F7AEA;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .btn-secondary:hover {
+      background-color: #805AD5;
+    }
+    .btn-remove {
+      background-color: #EF4444;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .btn-remove:hover {
+      background-color: #DC2626;
+    }
+    .btn-remove-light {
+      background-color: #FFEB3B;
+      color: #7C6F00;
+      transition: background-color 0.3s;
+      border: 1px solid #FBC02D;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+    }
+    .btn-remove-light:hover {
+      background-color: #FDD835;
+    }
+    .crm-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .crm-table th, .crm-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .crm-table th {
+      background-color: #F8FAFC;
+      font-weight: 600;
+    }
+    .crm-table tr:last-child td {
+      border-bottom: none;
+    }
+    .crm-table tr:hover {
+      background-color: #F1F5F9;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .focus-ring {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(107, 70, 193, 0.2);
+    }
+    .mt-1 {
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- MAIN CARD - ALL CONTENT GOES INSIDE THIS DIV -->
+  <div class="card">
+    <h1 class="text-2xl font-bold text-center text-purple-700 mb-6">Trichy Gold Campaign Manager</h1>
+    
+    <!-- Main Menu -->
+    <div class="mb-8">
+      <div class="flex gap-4 justify-center">
+        <button onclick="showSection('campaigns-table')" class="btn-primary py-2 px-4 rounded-md flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          <span>Campaigns Table</span>
+        </button>
+        <button onclick="showSection('new-campaign')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          <span>New Campaign</span>
+        </button>
+        <button onclick="showSection('edit-campaign')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+          <span>Edit Campaign</span>
+        </button>
+        <button onclick="showSection('export-campaigns')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          <span>Export Campaigns</span>
+        </button>
+        <button onclick="showSection('impression-tracking')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          <span>Impression Tracking</span>
+        </button>
+        <button onclick="showSection('user-manager')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+          <span>User & Role Manager</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Campaigns Table Section -->
+    <div id="campaigns-table" class="section">
+      <!-- Your existing campaigns table content -->
+      <h2 class="text-3xl font-semibold text-purple-700 mb-4">Campaigns</h2>
+      <!-- Filters and other campaign table content -->
+    </div>
+    
+    <!-- New Campaign Section -->
+    <div id="new-campaign" class="section hidden">
+      <!-- Your existing new campaign content -->
+      <h2 class="text-3xl font-semibold text-purple-700 mb-4">Create New Campaign</h2>
+      <!-- New campaign form content -->
+    </div>
+    
+    <!-- Edit Campaign Section -->
+    <div id="edit-campaign" class="section hidden">
+      <!-- Your existing edit campaign content -->
+      <h2 class="text-3xl font-semibold text-purple-700 mb-4">Edit Campaign</h2>
+      <!-- Edit campaign form content -->
+    </div>
+    
+    <!-- Export Campaigns Section -->
+    <div id="export-campaigns" class="section hidden">
+      <!-- Your existing export campaigns content -->
+      <h2 class="text-3xl font-semibold text-purple-700 mb-4">Export Campaigns</h2>
+      <!-- Export campaigns content -->
+    </div>
+    
+    <!-- Impression Tracking Section -->
+    <div id="impression-tracking" class="section hidden">
+      <!-- Your existing impression tracking content -->
+      <h2 class="text-3xl font-semibold text-purple-700 mb-4">Impression Tracking</h2>
+      <!-- Impression tracking content -->
+    </div>
+    
+    <!-- User & Role Manager Section -->
+    <div id="user-manager" class="section hidden">
+      <h2 class="text-3xl font-semibold text-purple-700 mb-4">Users</h2>
+      <button id="addUserBtn" class="btn-primary px-5 py-2 rounded-md mb-4">Add User</button>
+      <table class="crm-table w-full mb-6">
+        <thead>
+          <tr>
+            <th class="text-lg font-bold">Username</th>
+            <th class="text-lg font-bold">Role</th>
+            <th class="text-lg font-bold">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body">
+          <!-- Users will be loaded here -->
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- User Create Section -->
+    <div id="user-create-section" class="section hidden">
+      <h2 class="text-3xl font-semibold text-purple-700 mb-4 text-left">Create New User</h2>
+      <button id="backToUsersBtn" class="btn-secondary px-4 py-2 rounded-md mb-4">&larr; Back to Users</button>
+      <div class="w-full max-w-xl mx-auto">
+        <form id="createUserForm" class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end bg-white p-8 rounded-lg shadow">
+          <div class="sm:col-span-2">
+            <label for="newUserUsername" class="block text-sm font-medium text-purple-700">Username</label>
+            <input id="newUserUsername" name="username" type="text" required class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
+          </div>
+          <div class="sm:col-span-2">
+            <label for="newUserPassword" class="block text-sm font-medium text-purple-700">Password</label>
+            <input id="newUserPassword" name="password" type="password" required class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full">
+          </div>
+          <div class="sm:col-span-2 flex flex-col">
+            <label for="newUserRoles" class="block text-sm font-medium text-purple-700">Role</label>
+            <div class="flex gap-2 items-center">
+              <select id="newUserRoles" name="roles" class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[120px] w-full"></select>
+              <button type="button" id="manageRolesBtn" class="btn-secondary px-3 py-2 rounded-md" title="Manage roles">Manage Roles</button>
+            </div>
+          </div>
+          <div class="col-span-full flex justify-end">
+            <button type="submit" class="btn-primary py-2 px-6 rounded-md">Create User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Edit Roles Modal -->
+    <div id="editRolesModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-lg p-6 w-full max-w-xs relative">
+        <h3 class="text-md font-semibold text-purple-700 mb-3">Edit User Roles</h3>
+        <select id="editRolesSelect" multiple class="w-full mb-4 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+        <div class="flex justify-end gap-2">
+          <button id="editRolesCancelBtn" type="button" class="btn-secondary px-4 py-2 rounded">Cancel</button>
+          <button id="editRolesSaveBtn" type="button" class="btn-primary px-4 py-2 rounded">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts - OUTSIDE the card but inside body -->
+  <script src="/public/userManager.js"></script>
+</body>
+</html>
