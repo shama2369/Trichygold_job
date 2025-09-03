@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const excel = require('exceljs');
 const bodyParser = require('body-parser');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -12,6 +14,39 @@ const port = process.env.PORT || 3000;
 const uri = process.env.MONGO_URI;
 
 let db;
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'campaign-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Check if file is an image
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // User and Roles routes
 const userRoutes = require('./routes/userRoutes');
@@ -133,12 +168,44 @@ app.get('/api/debug/campaigns', async (req, res) => {
   }
 });
 
-// POST: Create or update campaign
-app.post('/api/campaigns', async (req, res) => {
+// POST: Create or update campaign with multiple image uploads
+app.post('/api/campaigns', upload.fields([
+  { name: 'campaignImage0', maxCount: 1 },
+  { name: 'campaignImage1', maxCount: 1 },
+  { name: 'campaignImage2', maxCount: 1 },
+  { name: 'campaignImage3', maxCount: 1 },
+  { name: 'campaignImage4', maxCount: 1 },
+  { name: 'campaignImage5', maxCount: 1 },
+  { name: 'campaignImage6', maxCount: 1 },
+  { name: 'campaignImage7', maxCount: 1 },
+  { name: 'campaignImage8', maxCount: 1 },
+  { name: 'campaignImage9', maxCount: 1 }
+]), async (req, res) => {
   try {
-    let campaignData = req.body;
+    // Parse campaign data from form
+    let campaignData;
+    try {
+      campaignData = JSON.parse(req.body.campaignData);
+    } catch (parseError) {
+      return res.status(400).json({ error: 'Invalid campaign data format' });
+    }
+    
     console.log('=== CAMPAIGN SUBMISSION DEBUG ===');
     console.log('Campaign data received:', JSON.stringify(campaignData, null, 2));
+    
+    // Handle multiple image uploads
+    if (req.files) {
+      const images = [];
+      Object.keys(req.files).forEach(fieldName => {
+        if (req.files[fieldName] && req.files[fieldName][0]) {
+          images.push(`/uploads/${req.files[fieldName][0].filename}`);
+        }
+      });
+      if (images.length > 0) {
+        campaignData.images = images;
+        console.log('Images uploaded:', images);
+      }
+    }
     
     if (campaignData.channels && Array.isArray(campaignData.channels)) {
       console.log('Channels found:', campaignData.channels.length);
@@ -370,7 +437,7 @@ app.get('/api/campaigns/:campaignId/export', async (req, res) => {
     const workbook = new excel.Workbook();
     const worksheet = workbook.addWorksheet('Campaigns');
     worksheet.columns = [
-      { header: 'Campaign ID', key: 'campaignId', width: 15 },
+      { header: 'Marketing ID', key: 'campaignId', width: 15 },
       { header: 'Name', key: 'name', width: 20 },
       { header: 'Description', key: 'description', width: 30 },
       { header: 'Start Date', key: 'startDate', width: 15 },
@@ -446,7 +513,7 @@ app.get('/api/campaigns/export', async (req, res) => {
     const worksheet = workbook.addWorksheet('Campaigns');
     
     worksheet.columns = [
-      { header: 'Campaign ID', key: 'campaignId', width: 15 },
+      { header: 'Marketing ID', key: 'campaignId', width: 15 },
       { header: 'Name', key: 'name', width: 20 },
       { header: 'Description', key: 'description', width: 30 },
       { header: 'Start Date', key: 'startDate', width: 15 },
@@ -914,6 +981,7 @@ app.get('/api/impressions/stats', async (req, res) => {
 // Static file serving should come after API routes
 app.use(express.static('.'));
 app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static('uploads'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -969,11 +1037,11 @@ async function setupDatabase() {
   }
 }
 
-// Generate Campaign ID using a persistent counter (5-digit format: CAMP_00001, CAMP_00002, etc.)
+// Generate Marketing ID using a persistent counter (5-digit format: MAK_00001, MAK_00002, etc.)
 async function getNextCampaignId() {
   try {
     const counters = db.collection('counters');
-    console.log('Getting next campaign ID from persistent counter...');
+    console.log('Getting next marketing ID from persistent counter...');
     
     // Atomically increment the counter and get the new value
     const result = await counters.findOneAndUpdate(
@@ -1000,8 +1068,8 @@ async function getNextCampaignId() {
       console.log('Fallback nextId:', nextId);
     }
     
-    const campaignId = `CAMP_${nextId.toString().padStart(5, '0')}`;
-    console.log(`Generated campaign ID: ${campaignId} (5-digit format)`);
+    const campaignId = `MAK_${nextId.toString().padStart(5, '0')}`;
+    console.log(`Generated marketing ID: ${campaignId} (5-digit format)`);
     return campaignId;
   } catch (err) {
     console.error('Error generating persistent campaignId:', err);

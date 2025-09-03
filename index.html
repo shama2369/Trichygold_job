@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trichy Gold Campaigns</title>
+  <title>Marketing Manager</title>
   <link rel="stylesheet" href="/public/styles.css">
   <style>
     body {
@@ -210,49 +210,38 @@
   <div id="main-content" class="min-h-screen flex items-center justify-center">
   <!-- MAIN CARD - ALL UI SECTIONS MUST BE INSIDE THIS DIV -->
     <div class="card w-full p-6 relative">
-    <h1 class="text-2xl font-bold text-center text-purple-700 mb-6">Trichy Gold Campaign Manager</h1>
+            <h1 class="text-2xl font-bold text-center text-purple-700 mb-6">Trichy Gold Marketing Manager</h1>
     
     <!-- Main Menu -->
     <div class="mb-8">
       <div class="flex gap-4 justify-center">
         <button onclick="showSection('campaigns-table')" class="btn-primary py-2 px-4 rounded-md flex items-center">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-          </svg>
-          <span>Campaigns Table</span>
+          <span class="mr-2">📊</span>
+          <span>Marketing Table</span>
         </button>
         <button onclick="showSection('new-campaign')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          <span>New Campaign</span>
+          <span class="mr-2">➕</span>
+          <span>Add New</span>
         </button>
         <button onclick="showSection('query-campaign')" class="btn-primary py-2 px-4 rounded-md flex items-center">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
-          <span>Query Campaign</span>
+          <span class="mr-2">🔍</span>
+          <span>Query</span>
         </button>
         <button onclick="showSection('edit-campaign')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-          </svg>
-          <span>Edit Campaign</span>
+          <span class="mr-2">✏️</span>
+          <span>Edit</span>
         </button>
         <button onclick="showSection('delete-campaign')" class="btn-secondary py-2 px-4 rounded-md flex items-center delete-campaign-btn" style="display: none;">
-          <span>Delete Campaign</span>
+          <span class="mr-2">🗑️</span>
+          <span>Delete</span>
         </button>
 
         <button onclick="showSection('export-campaign')" class="btn-primary py-2 px-4 rounded-md flex items-center">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2-8H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-1V3a1 1 0 00-1-1h-4a1 1 0 00-1 1v2z"></path>
-          </svg>
-          <span>Export Campaigns</span>
+          <span class="mr-2">📥</span>
+          <span>Export Table</span>
         </button>
         <button onclick="showSection('impression-tracking')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-          </svg>
+          <span class="mr-2">📈</span>
           <span>Impression Tracking</span>
         </button>
         <button onclick="showSection('user-manager')" class="btn-secondary py-2 px-4 rounded-md flex items-center">
@@ -278,7 +267,7 @@
 
       <!-- Campaigns Table -->
       <div class="mb-4">
-        <div class="mb-2"><b>Total Campaigns:</b> <span id="campaigns-count">0</span></div>
+        <div class="mb-2"><b>Total Records:</b> <span id="campaigns-count">0</span></div>
       </div>
       <div style="overflow-x: auto; width: 100%; border-bottom: 1.5px solid #d0d0d0;">
         <table class="crm-table" style="min-width: max-content; width: 100%;">
@@ -286,9 +275,9 @@
             <tr>
               <th style="width: 40px;"></th>
               <th style="width: 60px;">#</th>
-              <th style="width: 120px;">Campaign ID</th>
-              <th style="width: 150px;">Campaign Name</th>
-              <th style="width: 120px;">Offers</th>
+                              <th style="width: 120px;">Marketing ID</th>
+              <th style="width: 150px;">Name</th>
+              <th style="width: 120px;">Description</th>
               <th style="width: 100px;">Work Start Date</th>
               <th style="width: 100px;">Start Date</th>
               <th style="width: 100px;">End Date</th>
@@ -308,9 +297,9 @@
             <tr>
               <th><!-- No filter for checkbox --></th>
               <th><!-- No filter for # --></th>
-              <th><input type="text" id="filter-campaign-id" placeholder="Filter Campaign ID" class="form-control form-control-sm"></th>
-              <th><input type="text" id="filter-campaign-name" placeholder="Filter Campaign Name" class="form-control form-control-sm"></th>
-              <th><input type="text" id="filter-offers" placeholder="Filter Offers" class="form-control form-control-sm"></th>
+                              <th><input type="text" id="filter-campaign-id" placeholder="Filter Marketing ID" class="form-control form-control-sm"></th>
+              <th><input type="text" id="filter-campaign-name" placeholder="Filter Name" class="form-control form-control-sm"></th>
+              <th><input type="text" id="filter-offers" placeholder="Filter Description" class="form-control form-control-sm"></th>
               <th style="min-height: 80px; vertical-align: top;">
                 <div class="text-xs text-gray-600 mb-1 text-center">Work Start Date Range</div>
                 <div class="space-y-1">
@@ -416,7 +405,7 @@
 
 
     <div id="new-campaign" class="section hidden">
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Create Campaign</h2>
+              <h2 class="text-lg font-semibold text-purple-700 mb-4">Create New</h2>
       <div class="space-y-6">
         <!-- Campaign Form -->
         <div class="mb-6">
@@ -424,21 +413,22 @@
             <!-- Campaign ID and Name -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label for="campaignId" class="block text-sm font-medium text-purple-700">Campaign ID</label>
+                <label for="campaignId" class="block text-sm font-medium text-purple-700">Marketing ID</label>
                 <input id="campaignId" type="text" readonly class="w-full p-2 border rounded-md bg-gray-100 focus:outline-none" placeholder="Will be assigned automatically">
               </div>
               <div>
-                <label for="name" class="block text-sm font-medium text-purple-700">Campaign Name</label>
+                <label for="name" class="block text-sm font-medium text-purple-700">Name</label>
                 <input id="name" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
               </div>
             </div>
             
-            <!-- Offers -->
+            <!-- Description -->
             <div>
-              <label for="description" class="block text-sm font-medium text-purple-700">Offers</label>
+              <label for="description" class="block text-sm font-medium text-purple-700">Description</label>
               <input id="description" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
             </div>
             
+
             <!-- Work Start Date, Start Date and End Date -->
             <div class="grid grid-cols-3 gap-4">
               <div>
@@ -527,6 +517,7 @@
               </div>
             </div>
             
+            
             <!-- Goals -->
             <div class="border-t pt-4">
               <h3 class="text-md font-medium text-purple-600 mb-2">Goals</h3>
@@ -597,7 +588,23 @@
               <button class="btn-secondary mt-2 py-2 px-4 rounded-md" onclick="addChannelEntry()">Add Channel</button>
             </div>
             
-            <button onclick="submitCampaign()" class="btn-primary w-full py-2 rounded-md">Submit Campaign</button>
+            <!-- Campaign Images -->
+            <div class="border-t pt-4">
+              <h3 class="text-md font-medium text-purple-600 mb-2">Campaign Images</h3>
+              <div id="imageUploadContainer">
+                <div class="image-upload-item mb-4">
+                  <input type="file" accept="image/*" class="image-upload-input w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  <p class="text-xs text-gray-500 mt-1">Upload an image for this campaign (JPG, PNG, GIF - Max 5MB)</p>
+                  <div class="image-preview mt-2 hidden">
+                    <img src="" alt="Campaign Preview" class="max-w-xs h-32 object-cover rounded-md border">
+                    <button type="button" class="remove-image-btn mt-1 text-sm text-red-600 hover:text-red-800">Remove Image</button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" id="addImageBtn" class="btn-secondary py-2 px-4 rounded-md">Add More Images</button>
+            </div>
+            
+            <button onclick="submitCampaign()" class="btn-primary w-full py-2 rounded-md">Create New</button>
           </div>
         </div>
       </div>
@@ -605,17 +612,17 @@
 
     <!-- Edit Campaign Section -->
     <div id="edit-campaign" class="section hidden">
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Edit Campaign</h2>
+      <h2 class="text-lg font-semibold text-purple-700 mb-4">Edit</h2>
       <div class="space-y-6">
         <div class="mb-6">
-          <label for="editCampaignId" class="block text-sm font-medium text-gray-700 mb-2">Enter Campaign ID to Edit</label>
+          <label for="editCampaignId" class="block text-sm font-medium text-gray-700 mb-2">Enter Marketing ID to Edit</label>
           <div class="flex items-center space-x-4">
             <input id="editCampaignId" type="text" 
                    class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                   placeholder="e.g., CAMP_00001">
+                   placeholder="e.g., MAK_00001">
             <button onclick="loadCampaignForEdit()" 
-                    class="btn-secondary py-2 px-6 rounded-md whitespace-nowrap ml-12">
-              Load Campaign
+                    class="btn-secondary py-2 px-4 rounded-md whitespace-nowrap ml-12">
+              Load
             </button>
           </div>
         </div>
@@ -627,19 +634,19 @@
 
     <!-- Query Campaign Section -->
     <div id="query-campaign" class="section hidden">
-      <h2 class="text-lg font-semibold text-purple-700 mb-4">Query Campaign</h2>
+      <h2 class="text-lg font-semibold text-purple-700 mb-4">Query</h2>
       <div class="space-y-4">
         <!-- Manual Campaign Code Entry -->
         <div id="queryManualEntryContainer" class="flex gap-2 items-end">
-          <input id="queryCampaignCodeInput" type="text" class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter Campaign Code (e.g., CAMP_00001)">
-          <button id="queryLoadBtn" class="btn-secondary py-2 px-4 rounded-md">Load Campaign</button>
-        </div>
+          <input id="queryCampaignCodeInput" type="text" class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter Marketing Code (e.g., MAK_00001)">
+          <button id="queryLoadBtn" class="btn-secondary py-2 px-4 rounded-md">Load</button>
+          </div>
         <div id="queryCampaignForm" class="hidden mt-6 pt-4 border-t">
           <!-- Campaign details form will be loaded here -->
-        </div>
-      </div>
-      <button id="downloadExcelBtn" class="btn-secondary mt-3 py-2 px-4 rounded-md hidden">Download as Excel</button>
-      <script>
+</div>
+</div>
+<button id="downloadExcelBtn" class="btn-secondary mt-3 py-2 px-4 rounded-md hidden">Export Table</button>
+<script>
         // Helper to show/hide query campaign input section
         function setQueryCampaignInputVisibility(visible) {
           const manualInput = document.getElementById('queryManualEntryContainer');
@@ -684,50 +691,50 @@
         }
 
         // Manual campaign code entry logic for Query
-        document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
           addQueryCampaignMenuFunctionality();
-          const queryLoadBtn = document.getElementById('queryLoadBtn');
-          if (queryLoadBtn) {
-            queryLoadBtn.addEventListener('click', function() {
-              const code = document.getElementById('queryCampaignCodeInput').value.trim();
-              if (!code) {
-                alert('Please enter a campaign code.');
-                return;
-              }
-              // Find by campaignId (not _id)
-              const campaign = originalCampaigns.find(c => c.campaignId === code);
-              if (!campaign) {
-                alert('Campaign not found.');
-                return;
-              }
-              // Simulate radio selection logic
-              window.querySelectedCampaignById(campaign._id);
-            });
-          }
-          // Update visibility on page load
+            const queryLoadBtn = document.getElementById('queryLoadBtn');
+            if (queryLoadBtn) {
+              queryLoadBtn.addEventListener('click', function() {
+                const code = document.getElementById('queryCampaignCodeInput').value.trim();
+                if (!code) {
+                  alert('Please enter a marketing code.');
+                  return;
+                }
+                // Find by campaignId (not _id)
+                const campaign = originalCampaigns.find(c => c.campaignId === code);
+                if (!campaign) {
+                  alert('Campaign not found.');
+                  return;
+                }
+                // Simulate radio selection logic
+                window.querySelectedCampaignById(campaign._id);
+              });
+            }
+            // Update visibility on page load
           const selectedRadio = document.querySelector('input[name="selected_campaign"]:checked');
           setQueryCampaignInputVisibility(!selectedRadio);
-          // Update visibility on radio selection change
-          document.addEventListener('change', function(e) {
-            if (e.target && e.target.name === 'selected_campaign') {
+            // Update visibility on radio selection change
+            document.addEventListener('change', function(e) {
+              if (e.target && e.target.name === 'selected_campaign') {
               setQueryCampaignInputVisibility(false);
               window.querySelectedCampaign();
-            }
+              }
+            });
           });
-        });
-        // Helper to trigger query by _id
-        window.querySelectedCampaignById = function(campaignId) {
-          if (typeof window.querySelectedCampaign === 'function') {
-            window.querySelectedCampaign(campaignId);
+          // Helper to trigger query by _id
+          window.querySelectedCampaignById = function(campaignId) {
+            if (typeof window.querySelectedCampaign === 'function') {
+              window.querySelectedCampaign(campaignId);
+            }
           }
-        }
-      </script>
+</script>
     </div>
 
     <!-- Export Section -->
     <div id="export-campaign" class="section hidden">
       <h2 class="text-lg font-semibold text-purple-700 mb-4">Export All Campaigns to Excel</h2>
-      <button onclick="exportCampaigns()" class="btn-primary w-full py-2 rounded-md">Download Excel</button>
+              <button onclick="exportCampaigns()" class="btn-primary w-full py-2 rounded-md">Export Table</button>
     </div>
 
     <!-- Impression Tracking Section -->
@@ -757,8 +764,8 @@
         <div class="bg-white p-4 rounded-lg border border-gray-200">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label for="updateCampaignId" class="block text-sm font-medium text-purple-700">Campaign ID</label>
-              <input id="updateCampaignId" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="e.g., CAMP_00001">
+              <label for="updateCampaignId" class="block text-sm font-medium text-purple-700">Marketing ID</label>
+              <input id="updateCampaignId" type="text" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="e.g., MAK_00001">
             </div>
             <div class="flex items-end">
               <button onclick="loadCampaignChannels()" class="btn-secondary py-2 px-4 rounded-md">Load Channels</button>
@@ -810,7 +817,7 @@
 
       <!-- Campaign Impressions List -->
       <div class="mb-6">
-        <h3 class="text-md font-medium text-pink-600 mb-3">📋 All Campaigns with Impressions</h3>
+        <h3 class="text-md font-medium text-pink-600 mb-3">📋 All Marketing Records with Impressions</h3>
         <div id="campaignImpressionsList" class="bg-white p-4 rounded-lg border border-gray-200">
           <!-- Campaign list will be loaded here -->
         </div>
@@ -967,11 +974,11 @@
 
     <!-- Delete Campaign Section -->
     <div id="delete-campaign" class="section hidden">
-      <h2 class="text-lg font-semibold text-red-700 mb-4">Delete Campaign</h2>
+      <h2 class="text-lg font-semibold text-red-700 mb-4">Delete</h2>
       <div class="space-y-6">
         <div id="deleteManualEntryContainer" class="flex gap-2 items-end hidden">
-          <input id="deleteCampaignCodeInput" type="text" class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Enter Campaign Code (e.g., CAMP_00001)">
-          <button id="deleteManualBtn" class="btn-secondary py-2 px-4 rounded-md">Delete Campaign</button>
+          <input id="deleteCampaignCodeInput" type="text" class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Enter Marketing Code (e.g., MAK_00001)">
+          <button id="deleteManualBtn" class="btn-secondary py-2 px-4 rounded-md">Delete</button>
         </div>
         <div id="deleteResultMsg" class="hidden mt-4"></div>
       </div>
@@ -1841,10 +1848,21 @@
       console.log('Channels with impressions:', channels.map(ch => ({ type: ch.type, platform: ch.platform, impressions: ch.impressions })));
 
       try {
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('campaignData', JSON.stringify(campaignData));
+        
+        // Add all image files
+        const imageInputs = document.querySelectorAll('.image-upload-input');
+        imageInputs.forEach((input, index) => {
+          if (input.files[0]) {
+            formData.append(`campaignImage${index}`, input.files[0]);
+          }
+        });
+        
         const response = await fetch('/api/campaigns', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(campaignData),
+          body: formData, // Don't set Content-Type header, let browser set it for FormData
         });
         const result = await response.json();
         if (response.ok) {
@@ -1869,6 +1887,23 @@
       document.getElementById('endDate').value = '';
       document.getElementById('budget').value = '';
       document.getElementById('status').value = '';
+      
+      // Clear all image fields
+      document.querySelectorAll('.image-upload-input').forEach(input => {
+        input.value = '';
+      });
+      document.querySelectorAll('.image-preview').forEach(preview => {
+        preview.classList.add('hidden');
+        preview.querySelector('img').src = '';
+      });
+      
+      // Reset image counter and remove extra image items
+      imageCounter = 1;
+      const imageContainer = document.getElementById('imageUploadContainer');
+      const imageItems = imageContainer.querySelectorAll('.image-upload-item');
+      for (let i = 1; i < imageItems.length; i++) {
+        imageItems[i].remove();
+      }
       
       // Clear campaignId field - it will be assigned by backend
       document.getElementById('campaignId').value = '';
@@ -1929,19 +1964,19 @@
       console.log('querySelectedCampaign function called');
       let idToUse = campaignId;
       if (!idToUse) {
-        const selectedRadio = document.querySelector('input[name="selected_campaign"]:checked');
-        if (!selectedRadio) {
-          console.log('No campaign selected');
-          alert('Please select a campaign from the Campaigns Table first.');
-          // Reset the indicator
-          const indicator = document.getElementById('campaign-selected-indicator');
-          const instructions = document.getElementById('query-instructions');
-          if (indicator && instructions) {
-            indicator.classList.add('hidden');
-            instructions.classList.remove('hidden');
-          }
-          return;
+      const selectedRadio = document.querySelector('input[name="selected_campaign"]:checked');
+      if (!selectedRadio) {
+        console.log('No campaign selected');
+        alert('Please select a campaign from the Campaigns Table first.');
+        // Reset the indicator
+        const indicator = document.getElementById('campaign-selected-indicator');
+        const instructions = document.getElementById('query-instructions');
+        if (indicator && instructions) {
+          indicator.classList.add('hidden');
+          instructions.classList.remove('hidden');
         }
+        return;
+      }
         idToUse = selectedRadio.value;
       }
       const queryCampaignForm = document.getElementById('queryCampaignForm');
@@ -1976,20 +2011,20 @@
         // Create plain text description layout
         let formHTML = `
           <div class="space-y-4">
-            <!-- Campaign ID and Name -->
+            <!-- Marketing ID and Name -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-purple-700">Campaign ID</label>
+                <label class="block text-sm font-medium text-purple-700">Marketing ID</label>
                 <p class="text-base text-gray-900">${result.campaignId || 'N/A'}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-purple-700">Campaign Name</label>
+                <label class="block text-sm font-medium text-purple-700">Name</label>
                 <p class="text-base text-gray-900">${result.name || 'N/A'}</p>
               </div>
             </div>
-            <!-- Offers -->
+            <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-purple-700">Offers</label>
+              <label class="block text-sm font-medium text-purple-700">Description</label>
               <p class="text-base text-gray-900">${result.description || 'No description provided'}</p>
             </div>
             <!-- Work Start Date, Start Date and End Date -->
@@ -2077,7 +2112,7 @@
                 </div>
               </div>
             </div>` : ''}
-
+            
             <!-- Channels -->
             ${result.channels && result.channels.length > 0 ? `
             <div class="border-t pt-4">
@@ -2713,7 +2748,7 @@
             </button>
           </div>
         `;
-        // Re-attach updateChannelFields listener to the new select
+         // Re-attach updateChannelFields listener to the new select
          const newSelect = entry.querySelector('.channelType');
          if(newSelect) newSelect.onchange = () => updateChannelFields(newSelect);
 
@@ -3423,7 +3458,7 @@
           <p class="text-2xl font-bold text-blue-900">${new Intl.NumberFormat().format(stats.totalImpressions)}</p>
         </div>
         <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-          <h4 class="text-sm font-medium text-green-700 mb-2">Campaigns with Impressions</h4>
+                      <h4 class="text-sm font-medium text-green-700 mb-2">Marketing Records with Impressions</h4>
           <p class="text-2xl font-bold text-green-900">${stats.campaignsWithImpressions}</p>
         </div>
         <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
@@ -4455,7 +4490,7 @@
         } else {
           const error = await response.json();
           alert(`Failed to delete campaign: ${error.error || 'Unknown error'}`);
-        }
+              }
       } catch (error) {
         console.error('Delete campaign error:', error);
         alert('Failed to delete campaign. Please try again.');
@@ -4566,6 +4601,102 @@
       }
       
       // Session manager will handle showing login or main content
+      
+      // Multiple image upload handling
+      let imageCounter = 1;
+      
+      // Handle image upload for existing and new image inputs
+      function setupImageHandling(imageInput) {
+        imageInput.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+              alert('File size must be less than 5MB');
+              this.value = '';
+              return;
+            }
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+              alert('Please select an image file');
+              this.value = '';
+              return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              const preview = imageInput.closest('.image-upload-item').querySelector('.image-preview');
+              const previewImg = preview.querySelector('img');
+              previewImg.src = e.target.result;
+              preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+      
+      // Handle remove image button
+      function setupRemoveImage(removeBtn) {
+        removeBtn.addEventListener('click', function() {
+          const imageItem = this.closest('.image-upload-item');
+          const imageInput = imageItem.querySelector('.image-upload-input');
+          const preview = imageItem.querySelector('.image-preview');
+          
+          imageInput.value = '';
+          preview.classList.add('hidden');
+          preview.querySelector('img').src = '';
+        });
+      }
+      
+      // Handle remove image field button
+      function setupRemoveImageField(removeFieldBtn) {
+        removeFieldBtn.addEventListener('click', function() {
+          const imageItem = this.closest('.image-upload-item');
+          imageItem.remove();
+        });
+      }
+      
+      // Setup initial image handling
+      document.querySelectorAll('.image-upload-input').forEach(setupImageHandling);
+      document.querySelectorAll('.remove-image-btn').forEach(setupRemoveImage);
+      document.querySelectorAll('.remove-image-field-btn').forEach(setupRemoveImageField);
+      
+
+      
+      // Add more images functionality
+      const addImageBtn = document.getElementById('addImageBtn');
+      const imageContainer = document.getElementById('imageUploadContainer');
+      
+      if (addImageBtn) {
+        addImageBtn.addEventListener('click', function() {
+          imageCounter++;
+          const newImageItem = document.createElement('div');
+          newImageItem.className = 'image-upload-item mb-4';
+          newImageItem.innerHTML = `
+            <input type="file" accept="image/*" class="image-upload-input w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-xs text-gray-500">Upload an image for this campaign (JPG, PNG, GIF - Max 5MB)</p>
+              <button type="button" class="remove-image-field-btn text-red-500 hover:text-red-700 text-lg font-bold ml-2">×</button>
+            </div>
+            <div class="image-preview mt-2 hidden">
+              <img src="" alt="Campaign Preview" class="max-w-xs h-32 object-cover rounded-md border">
+              <button type="button" class="remove-image-btn mt-1 text-sm text-red-600 hover:text-red-800">Remove Image</button>
+            </div>
+          `;
+          
+          imageContainer.appendChild(newImageItem);
+          
+          // Setup handling for new image input
+          const newImageInput = newImageItem.querySelector('.image-upload-input');
+          const newRemoveBtn = newImageItem.querySelector('.remove-image-btn');
+          const newRemoveFieldBtn = newImageItem.querySelector('.remove-image-field-btn');
+          setupImageHandling(newImageInput);
+          setupRemoveImage(newRemoveBtn);
+          setupRemoveImageField(newRemoveFieldBtn);
+        });
+      }
       
       // Ensure only campaigns table is visible by default
       const allSections = document.querySelectorAll('.section');
