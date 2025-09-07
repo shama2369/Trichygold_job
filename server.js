@@ -444,6 +444,7 @@ app.get('/api/campaigns/:campaignId/export', async (req, res) => {
       { header: 'End Date', key: 'endDate', width: 15 },
       { header: 'Budget (AED)', key: 'budget', width: 10 },
       { header: 'Status', key: 'status', width: 10 },
+      { header: 'Job Assigned To', key: 'jobAssignedTo', width: 15 },
       { header: 'Channels', key: 'channels', width: 50 },
     ];
 
@@ -520,6 +521,7 @@ app.get('/api/campaigns/export', async (req, res) => {
       { header: 'End Date', key: 'endDate', width: 15 },
       { header: 'Budget (AED)', key: 'budget', width: 10 },
       { header: 'Status', key: 'status', width: 10 },
+      { header: 'Job Assigned To', key: 'jobAssignedTo', width: 15 },
       { header: 'Channels', key: 'channels', width: 50 },
     ];
     

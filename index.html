@@ -283,6 +283,7 @@
               <th style="width: 100px;">End Date</th>
               <th style="width: 100px;">Budget (AED)</th>
               <th style="width: 100px;">Status</th>
+              <th style="width: 120px;">Job Assigned To</th>
               <th style="width: 120px;">Target Age</th>
               <th style="width: 100px;">Target Gender</th>
               <th style="width: 150px;">Categories</th>
@@ -333,6 +334,11 @@
                   <option value="Suggested">Suggested</option>
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
+                </select>
+              </th>
+              <th>
+                <select id="filter-job-assigned-to" class="form-control form-control-sm">
+                  <option value="">All Job Assigned To</option>
                 </select>
               </th>
               <th><input type="text" id="filter-target-age" placeholder="Filter Age" class="form-control form-control-sm"></th>
@@ -445,8 +451,8 @@
               </div>
             </div>
             
-            <!-- Budget and Status -->
-            <div class="grid grid-cols-2 gap-4">
+            <!-- Budget, Status and Job Assigned To -->
+            <div class="grid grid-cols-3 gap-4">
               <div>
                 <label for="budget" class="block text-sm font-medium text-purple-700">Budget (AED)</label>
                 <input id="budget" type="number" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
@@ -460,6 +466,12 @@
                   <option value="Suggested">Suggested</option>
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div>
+                <label for="jobAssignedTo" class="block text-sm font-medium text-purple-700">Job Assigned To</label>
+                <select id="jobAssignedTo" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  <option value="">Select Employee</option>
                 </select>
               </div>
             </div>
@@ -1073,7 +1085,7 @@
                   if (originalCampaigns.length === 0) {
                     const tableBody = document.getElementById('campaigns-table-body');
                     if (tableBody) {
-                      tableBody.innerHTML = '<tr><td colspan="20" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
+                      tableBody.innerHTML = '<tr><td colspan="21" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
                     }
                   }
                   
@@ -1825,6 +1837,7 @@
         endDate: document.getElementById('endDate').value,
         budget: parseFloat(document.getElementById('budget').value) || 0,
         status: document.getElementById('status').value,
+        jobAssignedTo: document.getElementById('jobAssignedTo').value,
         targetAudience: {
           age: document.getElementById('targetAge').value,
           gender: document.getElementById('targetGender').value,
@@ -1878,6 +1891,175 @@
       }
     }
 
+    // Function to load users for job assignment dropdown
+    async function loadUsersForJobAssignment() {
+      try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const users = await response.json();
+          const jobAssignedToSelect = document.getElementById('jobAssignedTo');
+          if (jobAssignedToSelect) {
+            // Clear existing options except the first one
+            jobAssignedToSelect.innerHTML = '<option value="">Select Employee</option>';
+            
+            // Add ONLY active users (excluding Superuser) - NO deleted users in new campaign form
+            users.forEach(user => {
+              if (user.username !== 'Superuser') {
+                const option = document.createElement('option');
+                option.value = user.username;
+                option.textContent = user.username;
+                jobAssignedToSelect.appendChild(option);
+              }
+            });
+          }
+        } else {
+          console.error('Failed to load users:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+
+    // Function to get existing job assignments from campaigns
+    async function getExistingJobAssignments() {
+      try {
+        const response = await fetch('/api/campaigns');
+        if (response.ok) {
+          const campaigns = await response.json();
+          const assignments = new Set();
+          campaigns.forEach(campaign => {
+            if (campaign.jobAssignedTo && campaign.jobAssignedTo.trim() !== '') {
+              assignments.add(campaign.jobAssignedTo);
+            }
+          });
+          return Array.from(assignments);
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching existing job assignments:', error);
+        return [];
+      }
+    }
+
+    // Function to refresh job assignment dropdowns (call this when users are added/updated)
+    // Note: Not called when users are deleted to preserve existing job assignments
+    function refreshJobAssignmentDropdowns() {
+      // Refresh dropdown in new campaign form
+      const newCampaignSelect = document.getElementById('jobAssignedTo');
+      if (newCampaignSelect) {
+        loadUsersForJobAssignment();
+      }
+      
+      // Refresh dropdown in edit form if it exists
+      const editForm = document.getElementById('editCampaignForm');
+      if (editForm) {
+        const editSelect = editForm.querySelector('#jobAssignedTo');
+        if (editSelect) {
+          // Get current assigned user from the dropdown value
+          const currentAssignedUser = editSelect.value || null;
+          loadUsersForJobAssignmentInForm(editForm, currentAssignedUser);
+        }
+      }
+      
+      // Refresh filter dropdown in campaigns table
+      loadUsersForJobAssignmentFilter();
+    }
+
+    // Make refresh function globally available
+    window.refreshJobAssignmentDropdowns = refreshJobAssignmentDropdowns;
+    
+    // Make loadUsersForJobAssignment globally available for testing
+    window.loadUsersForJobAssignment = loadUsersForJobAssignment;
+
+    // Function to load users for job assignment dropdown in a specific form
+    async function loadUsersForJobAssignmentInForm(formContainer, currentAssignedUser = null) {
+      try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const users = await response.json();
+          const jobAssignedToSelect = formContainer.querySelector('#jobAssignedTo');
+          if (jobAssignedToSelect) {
+            // Clear existing options except the first one
+            jobAssignedToSelect.innerHTML = '<option value="">Select Employee</option>';
+            
+            // Add ONLY active users (excluding Superuser) - NO deleted users in edit form
+            users.forEach(user => {
+              if (user.username !== 'Superuser') {
+                const option = document.createElement('option');
+                option.value = user.username;
+                option.textContent = user.username;
+                jobAssignedToSelect.appendChild(option);
+              }
+            });
+            
+            // Special case: If the campaign being edited has a deleted user assigned,
+            // add that specific user to the dropdown so the current assignment is preserved
+            if (currentAssignedUser) {
+              const isActiveUser = users.find(user => user.username === currentAssignedUser);
+              if (!isActiveUser && currentAssignedUser !== 'Superuser') {
+                const option = document.createElement('option');
+                option.value = currentAssignedUser;
+                option.textContent = currentAssignedUser + ' (Inactive)';
+                option.style.color = '#6B7280';
+                jobAssignedToSelect.appendChild(option);
+              }
+            }
+          }
+        } else {
+          console.error('Failed to load users for edit form:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error loading users for edit form:', error);
+      }
+    }
+
+    // Function to load users for job assignment filter dropdown
+    async function loadUsersForJobAssignmentFilter() {
+      try {
+        const response = await fetch('/api/users');
+        if (response.ok) {
+          const users = await response.json();
+          const filterSelect = document.getElementById('filter-job-assigned-to');
+          if (filterSelect) {
+            // Clear existing options except the first one
+            filterSelect.innerHTML = '<option value="">All Job Assigned To</option>';
+            
+            // Get existing job assignments to include deleted users
+            const existingAssignments = await getExistingJobAssignments();
+            
+            // Add active users (excluding Superuser)
+            users.forEach(user => {
+              if (user.username !== 'Superuser') {
+                const option = document.createElement('option');
+                option.value = user.username;
+                option.textContent = user.username;
+                filterSelect.appendChild(option);
+              }
+            });
+            
+            // Add previously assigned users who might have been deleted
+            existingAssignments.forEach(username => {
+              if (username) {
+                const isActiveUser = users.find(user => user.username === username);
+                if (!isActiveUser) {
+                  // User was deleted but has existing assignments - show as inactive
+                  const option = document.createElement('option');
+                  option.value = username;
+                  option.textContent = username + ' (Inactive)';
+                  option.style.color = '#6B7280';
+                  filterSelect.appendChild(option);
+                }
+              }
+            });
+          }
+        } else {
+          console.error('Failed to load users for filter:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error loading users for filter:', error);
+      }
+    }
+
     function clearForm() {
       // Clear basic fields
       document.getElementById('name').value = '';
@@ -1887,6 +2069,7 @@
       document.getElementById('endDate').value = '';
       document.getElementById('budget').value = '';
       document.getElementById('status').value = '';
+      document.getElementById('jobAssignedTo').value = '';
       
       // Clear all image fields
       document.querySelectorAll('.image-upload-input').forEach(input => {
@@ -2265,6 +2448,10 @@
                     <p class="text-base text-gray-900">${result.status || 'N/A'}</p>
                   </div>
                   <div>
+                    <p class="text-sm font-medium text-gray-600">Job Assigned To</p>
+                    <p class="text-base text-gray-900">${result.jobAssignedTo || 'N/A'}</p>
+                  </div>
+                  <div>
                     <p class="text-sm font-medium text-gray-600">Budget</p>
                     <p class="text-base text-gray-900">${result.budget ? new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED' }).format(result.budget) : 'N/A'}</p>
                   </div>
@@ -2511,7 +2698,15 @@
       if (sectionId === 'campaigns-table') {
         // Auto-load campaigns when table section is shown
         if (typeof loadCampaignsTable === 'function') loadCampaignsTable();
+      } else if (sectionId === 'impression-tracking') {
+        // Auto-load impression stats when impression tracking section is shown
+        if (typeof loadImpressionStats === 'function') loadImpressionStats();
+        if (typeof loadTagCounters === 'function') loadTagCounters();
       } else if (sectionId === 'new-campaign') {
+        // Load users for job assignment dropdown when new-campaign section is shown
+        setTimeout(() => {
+          if (typeof loadUsersForJobAssignment === 'function') loadUsersForJobAssignment();
+        }, 100);
         // Reset the form
         const form = document.querySelector('#new-campaign form');
         if (form) form.reset();
@@ -2564,7 +2759,7 @@
     function addEditCampaignMenuFunctionality() {
       const editMenuBtn = document.querySelector("button[onclick=\"showSection('edit-campaign')\"]");
       if (!editMenuBtn) { console.log('Edit menu button not found'); return; }
-      editMenuBtn.addEventListener('click', function(event) {
+      editMenuBtn.addEventListener('click', async function(event) {
         event.preventDefault();
         // Find selected campaign
         const selectedRadio = document.querySelector('input[name="selected_campaign"]:checked');
@@ -2580,7 +2775,7 @@
             if (editInput) editInput.value = campaign.campaignId;
             showSection('edit-campaign');
             setEditCampaignInputVisibility(false);
-            loadCampaignForEditDirect(campaign);
+            await loadCampaignForEditDirect(campaign);
             // Ensure the edit form is visible
             const editForm = document.getElementById('editCampaignForm');
             if (editForm) editForm.classList.remove('hidden');
@@ -2611,7 +2806,7 @@
         const result = await response.json();
         if (response.ok) {
           setEditCampaignInputVisibility(false);
-          loadCampaignForEditDirect(result);
+          await loadCampaignForEditDirect(result);
         } else {
           alert('Error: ' + result.error);
         }
@@ -2620,7 +2815,7 @@
       }
     }
 
-    function loadCampaignForEditDirect(campaign) {
+    async function loadCampaignForEditDirect(campaign) {
       // Clone the new campaign form
       const newCampaignFormTemplate = document.querySelector('#new-campaign .space-y-6');
       const editFormContainer = document.getElementById('editCampaignForm');
@@ -2631,9 +2826,13 @@
       // Create a new form element and append cloned children
       const editForm = document.createElement('div');
       editForm.className = newCampaignFormTemplate.className; // Copy classes
+      
       Array.from(newCampaignFormTemplate.children).forEach(child => {
           editForm.appendChild(child.cloneNode(true));
       });
+      
+      // Load users for job assignment dropdown AFTER cloning
+      await loadUsersForJobAssignmentInForm(editForm, campaign.jobAssignedTo);
 
       // Add hidden input for MongoDB _id
       const hiddenIdInput = document.createElement('input');
@@ -2823,6 +3022,7 @@
           endDate: editForm.querySelector('#endDate')?.value || '',
           budget: parseFloat(editForm.querySelector('#budget')?.value) || 0,
           status: editForm.querySelector('#status')?.value || 'Active',
+          jobAssignedTo: editForm.querySelector('#jobAssignedTo')?.value || '',
           targetAudience: {
             age: editForm.querySelector('#targetAge')?.value || '',
             gender: editForm.querySelector('#targetGender')?.value || 'All',
@@ -2960,6 +3160,23 @@
             workStartDateInput.focus();
           }
         });
+      }
+      const jobAssignedToSelect = form.querySelector('#jobAssignedTo');
+      if (jobAssignedToSelect) {
+        // Set the value if it exists in the dropdown options
+        const optionExists = Array.from(jobAssignedToSelect.options).some(option => option.value === campaign.jobAssignedTo);
+        if (optionExists) {
+          jobAssignedToSelect.value = campaign.jobAssignedTo || '';
+        } else {
+          // If the assigned user doesn't exist in current users, add it as an option
+          if (campaign.jobAssignedTo) {
+            const option = document.createElement('option');
+            option.value = campaign.jobAssignedTo;
+            option.textContent = campaign.jobAssignedTo;
+            jobAssignedToSelect.appendChild(option);
+            jobAssignedToSelect.value = campaign.jobAssignedTo;
+          }
+        }
       }
 
       // Fill in target audience
@@ -3900,6 +4117,14 @@
           loadImpressionStats();
           loadTagCounters();
         }
+        
+        // Load users for job assignment dropdown when new-campaign section is shown
+        if (sectionId === 'new-campaign') {
+          // Add a small delay to ensure the DOM is ready
+          setTimeout(() => {
+            loadUsersForJobAssignment();
+          }, 100);
+        }
       } else {
         console.error(`Section with ID ${sectionId} not found.`);
       }
@@ -3996,6 +4221,8 @@
         console.log('[DEBUG] API Response data:', campaigns);
         
         if (response.ok) {
+          // Load job assignment filter dropdown
+          loadUsersForJobAssignmentFilter();
           displayCampaignsTable(campaigns);
         } else {
           console.error('Error loading campaigns:', campaigns.error);
@@ -4044,6 +4271,7 @@
       const budgetMin = document.getElementById('filter-budget-min')?.value || '';
       const budgetMax = document.getElementById('filter-budget-max')?.value || '';
       const statusFilter = document.getElementById('filter-status')?.value || '';
+      const jobAssignedToFilter = document.getElementById('filter-job-assigned-to')?.value || '';
       const targetAgeFilter = document.getElementById('filter-target-age')?.value.toLowerCase() || '';
       const targetGenderFilter = document.getElementById('filter-target-gender')?.value || '';
       const categoriesFilter = document.getElementById('filter-categories')?.value || '';
@@ -4085,6 +4313,9 @@
         // Status filter
         if (statusFilter && campaign.status !== statusFilter) return false;
         
+        // Job Assigned To filter
+        if (jobAssignedToFilter && campaign.jobAssignedTo !== jobAssignedToFilter) return false;
+        
         // Target Age filter
         if (targetAgeFilter && !(campaign.targetAudience?.age || '').toLowerCase().includes(targetAgeFilter)) return false;
         
@@ -4124,7 +4355,7 @@
       
       // Display filtered campaigns
       if (filteredCampaigns.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="20" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="21" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
         return;
       }
       
@@ -4150,6 +4381,7 @@
             <td>${endDate}</td>
             <td>${campaign.budget ? new Intl.NumberFormat().format(campaign.budget) : ''}</td>
             <td>${campaign.status || ''}</td>
+            <td>${campaign.jobAssignedTo || ''}</td>
             <td>${campaign.targetAudience?.age || ''}</td>
             <td>${campaign.targetAudience?.gender || ''}</td>
             <td>${categories}</td>
@@ -4235,7 +4467,7 @@
       const filterInputs = [
         'filter-campaign-id', 'filter-campaign-name', 'filter-offers', 
         'filter-start-date-from', 'filter-start-date-to', 'filter-end-date-from', 'filter-end-date-to',
-        'filter-budget-min', 'filter-budget-max', 'filter-status', 'filter-target-age', 'filter-target-gender',
+        'filter-budget-min', 'filter-budget-max', 'filter-status', 'filter-job-assigned-to', 'filter-target-age', 'filter-target-gender',
         'filter-categories', 'filter-goal-sales-min', 'filter-goal-sales-max', 'filter-goal-impressions-min',
         'filter-goal-impressions-max', 'filter-goal-conversions-min', 'filter-goal-conversions-max',
         'filter-achieved-sales-min', 'filter-achieved-sales-max', 'filter-achieved-impressions-min',
@@ -4277,6 +4509,7 @@
       const budgetMin = document.getElementById('filter-budget-min')?.value || '';
       const budgetMax = document.getElementById('filter-budget-max')?.value || '';
       const statusFilter = document.getElementById('filter-status')?.value || '';
+      const jobAssignedToFilter = document.getElementById('filter-job-assigned-to')?.value || '';
       const targetAgeFilter = document.getElementById('filter-target-age')?.value.toLowerCase() || '';
       const targetGenderFilter = document.getElementById('filter-target-gender')?.value || '';
       const categoriesFilter = document.getElementById('filter-categories')?.value || '';
@@ -4318,6 +4551,9 @@
         // Status filter
         if (statusFilter && campaign.status !== statusFilter) return false;
         
+        // Job Assigned To filter
+        if (jobAssignedToFilter && campaign.jobAssignedTo !== jobAssignedToFilter) return false;
+        
         // Target Age filter
         if (targetAgeFilter && !(campaign.targetAudience?.age || '').toLowerCase().includes(targetAgeFilter)) return false;
         
@@ -4357,7 +4593,7 @@
       
       // Display filtered campaigns
       if (filteredCampaigns.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="20" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="21" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
         return;
       }
       
@@ -4383,6 +4619,7 @@
             <td>${endDate}</td>
             <td>${campaign.budget ? new Intl.NumberFormat().format(campaign.budget) : ''}</td>
             <td>${campaign.status || ''}</td>
+            <td>${campaign.jobAssignedTo || ''}</td>
             <td>${campaign.targetAudience?.age || ''}</td>
             <td>${campaign.targetAudience?.gender || ''}</td>
             <td>${categories}</td>
@@ -4469,7 +4706,7 @@
           if (originalCampaigns.length === 0) {
             const tableBody = document.getElementById('campaigns-table-body');
             if (tableBody) {
-              tableBody.innerHTML = '<tr><td colspan="20" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
+              tableBody.innerHTML = '<tr><td colspan="21" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
             }
           }
           

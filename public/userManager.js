@@ -191,6 +191,9 @@ async function removeUser(id) {
   if (!confirm('Delete this user?')) return;
   await deleteUser(id);
   renderUsersTable();
+  
+  // Note: We don't refresh job assignment dropdowns when deleting users
+  // because deleted users might have existing job assignments that need to be preserved
 }
 
 // Make removeUser globally accessible
@@ -214,6 +217,11 @@ async function handleCreateUser(e) {
   }
   document.getElementById('createUserForm').reset();
   renderUsersTable();
+  
+  // Refresh job assignment dropdowns if the function exists
+  if (typeof window.refreshJobAssignmentDropdowns === 'function') {
+    window.refreshJobAssignmentDropdowns();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function () {

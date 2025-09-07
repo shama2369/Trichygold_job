@@ -106,14 +106,14 @@ The Campaign Management System now implements a comprehensive Role-Based Access 
 4. UI is updated based on user permissions
 5. User can access only permitted features
 
-### 3. **Demo Users**
-For testing purposes, the following demo users are available:
+### 3. **Current Users**
+The following users are available in the system:
 
-| Username | Password | Role | Access Level |
-|----------|----------|------|--------------|
-| `admin` | `admin123` | Admin | Full access |
-| `editor` | `editor123` | Editor | Create/Edit campaigns |
-| `viewer` | `viewer123` | Viewer | View only |
+| Username | Email | Role | Access Level |
+|----------|-------|------|--------------|
+| `Superuser` | shama2369@gmail.com | Admin | Full access |
+| `Samim` | trichygoldmarketing@gmail.com | Editor | Create/Edit campaigns |
+| `Muad` | trichygoldmarketing@gmail.com | Editor | Create/Edit campaigns |
 
 ## 🎯 Permission-Based UI Control
 
@@ -240,7 +240,7 @@ function canCreateCampaigns() {
 ### 1. **Login Process**
 1. Open the application
 2. Login form will be displayed
-3. Enter credentials (use demo users above)
+3. Enter credentials (use current users above)
 4. System will load user permissions
 5. UI will be updated based on role
 
@@ -297,7 +297,7 @@ function canCreateCampaigns() {
 ## 🛠️ Troubleshooting
 
 ### Common Issues:
-1. **Login not working**: Check if demo users exist in database
+1. **Login not working**: Check if users exist in database
 2. **Permissions not loading**: Check browser console for API errors
 3. **UI not updating**: Ensure session manager is properly initialized
 4. **Role changes not reflecting**: Logout and login again

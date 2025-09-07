@@ -27,9 +27,7 @@ async function setKnownPasswords() {
     const userPasswords = {
       'Muad': 'muad123',
       'Superuser': 'super123',
-      'admin': 'admin123',
-      'editor': 'editor123',
-      'viewer': 'viewer123'
+      'Samim': 'samim123'
     };
     
     console.log('\n=== SETTING KNOWN PASSWORDS ===');
