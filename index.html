@@ -1258,7 +1258,7 @@
               });
               
               // Auto-generate tag when platform is selected
-              if (isPlatformSelected) {
+              if (isPlatformSelected && !platformSelect.hasAttribute('data-populating')) {
                 // Create a temporary button element to pass the correct entry reference
                 const tempButton = document.createElement('button');
                 tempButton.style.display = 'none';
@@ -1428,7 +1428,7 @@
           
           // Auto-generate tag when platform is selected
           platformSelect.addEventListener('change', function() {
-            if (this.value && this.value.trim() !== '') {
+            if (this.value && this.value.trim() !== '' && !this.hasAttribute('data-populating')) {
               // Create a temporary button element to pass the correct entry reference
               const tempButton = document.createElement('button');
               tempButton.style.display = 'none';
@@ -3418,8 +3418,12 @@
           platformSelect.value = channel.platform || '';
           console.log('Set platform:', channel.platform, 'in element:', platformSelect);
           // Trigger platform change to enable fields and populate ad type
+          // But don't generate new tags during edit form population
           if (channel.platform) {
+            // Temporarily disable tag generation during form population
+            platformSelect.setAttribute('data-populating', 'true');
             platformSelect.dispatchEvent(new Event('change'));
+            platformSelect.removeAttribute('data-populating');
           }
         } else {
           console.log('Platform select not found');

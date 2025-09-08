@@ -245,15 +245,13 @@ app.post('/api/campaigns', upload.fields([
         console.log(`Create: New campaign has tags: ${tagNumbers.join(', ')}`);
         
         existingCampaigns.forEach(campaign => {
-          // Skip current campaign if updating
-          if (campaign.campaignId !== campaignData.campaignId) {
-            if (campaign.channels && Array.isArray(campaign.channels)) {
-              campaign.channels.forEach(channel => {
-                if (channel.tagNumber) {
-                  existingTags.add(channel.tagNumber);
-                }
-              });
-            }
+          // For CREATE: include all campaigns (campaignData.campaignId is undefined)
+          if (campaign.channels && Array.isArray(campaign.channels)) {
+            campaign.channels.forEach(channel => {
+              if (channel.tagNumber) {
+                existingTags.add(channel.tagNumber);
+              }
+            });
           }
         });
         
