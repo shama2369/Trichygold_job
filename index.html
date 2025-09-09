@@ -2214,15 +2214,15 @@
             <div class="grid grid-cols-3 gap-4">
               <div>
                 <label class="block text-sm font-medium text-purple-700">Work Start Date</label>
-                <p class="text-base text-gray-900">${result.workStartDate ? new Date(result.workStartDate).toLocaleDateString() : 'N/A'}</p>
+                <p class="text-base text-gray-900">${result.workStartDate ? formatDateDDMMYY(result.workStartDate) : 'N/A'}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-purple-700">Start Date</label>
-                <p class="text-base text-gray-900">${result.startDate ? new Date(result.startDate).toLocaleDateString() : 'N/A'}</p>
+                <p class="text-base text-gray-900">${result.startDate ? formatDateDDMMYY(result.startDate) : 'N/A'}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-purple-700">End Date</label>
-                <p class="text-base text-gray-900">${result.endDate ? new Date(result.endDate).toLocaleDateString() : 'N/A'}</p>
+                <p class="text-base text-gray-900">${result.endDate ? formatDateDDMMYY(result.endDate) : 'N/A'}</p>
               </div>
             </div>
             <!-- Budget and Status -->
@@ -2359,12 +2359,12 @@
                       ${channel.startDate ? `
                       <div>
                         <label class="block text-sm font-medium text-purple-700">Start Date</label>
-                        <p class="text-base text-gray-900">${new Date(channel.startDate).toLocaleDateString()}</p>
+                        <p class="text-base text-gray-900">${formatDateDDMMYY(channel.startDate)}</p>
                       </div>` : ''}
                       ${channel.endDate ? `
                       <div>
                         <label class="block text-sm font-medium text-purple-700">End Date</label>
-                        <p class="text-base text-gray-900">${new Date(channel.endDate).toLocaleDateString()}</p>
+                        <p class="text-base text-gray-900">${formatDateDDMMYY(channel.endDate)}</p>
                       </div>` : ''}
                     </div>
                   </div>
@@ -2463,15 +2463,15 @@
                 <div class="grid grid-cols-3 gap-4 mt-3">
                   <div>
                     <p class="text-sm font-medium text-gray-600">Work Start Date</p>
-                    <p class="text-base text-gray-900">${result.workStartDate ? new Date(result.workStartDate).toLocaleDateString() : 'N/A'}</p>
+                    <p class="text-base text-gray-900">${result.workStartDate ? formatDateDDMMYY(result.workStartDate) : 'N/A'}</p>
                   </div>
                   <div>
                     <p class="text-sm font-medium text-gray-600">Start Date</p>
-                    <p class="text-base text-gray-900">${result.startDate ? new Date(result.startDate).toLocaleDateString() : 'N/A'}</p>
+                    <p class="text-base text-gray-900">${result.startDate ? formatDateDDMMYY(result.startDate) : 'N/A'}</p>
                   </div>
                   <div>
                     <p class="text-sm font-medium text-gray-600">End Date</p>
-                    <p class="text-base text-gray-900">${result.endDate ? new Date(result.endDate).toLocaleDateString() : 'N/A'}</p>
+                    <p class="text-base text-gray-900">${result.endDate ? formatDateDDMMYY(result.endDate) : 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -2599,12 +2599,12 @@
                         ${channel.startDate ? `
                         <div>
                           <p class="text-sm font-medium text-gray-600">Start Date</p>
-                          <p class="text-base text-gray-900">${new Date(channel.startDate).toLocaleDateString()}</p>
+                          <p class="text-base text-gray-900">${formatDateDDMMYY(channel.startDate)}</p>
                         </div>` : ''}
                         ${channel.endDate ? `
                         <div>
                           <p class="text-sm font-medium text-gray-600">End Date</p>
-                          <p class="text-base text-gray-900">${new Date(channel.endDate).toLocaleDateString()}</p>
+                          <p class="text-base text-gray-900">${formatDateDDMMYY(channel.endDate)}</p>
                         </div>` : ''}
                       </div>
                     </div>
@@ -4239,6 +4239,19 @@
     // Store original campaigns data for filtering
     let originalCampaigns = [];
     
+    // Helper function to format dates in dd/mm/yy format
+    function formatDateDDMMYY(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = String(date.getFullYear()).slice(-2);
+      
+      return `${day}/${month}/${year}`;
+    }
+    
     // Function to display campaigns in table
     function displayCampaignsTable(campaigns) {
       console.log('displayCampaignsTable called with:', campaigns);
@@ -4365,9 +4378,9 @@
       
       let html = '';
       filteredCampaigns.forEach((campaign, index) => {
-        const workStartDate = campaign.workStartDate ? new Date(campaign.workStartDate).toLocaleDateString() : '';
-        const startDate = campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : '';
-        const endDate = campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : '';
+        const workStartDate = formatDateDDMMYY(campaign.workStartDate);
+        const startDate = formatDateDDMMYY(campaign.startDate);
+        const endDate = formatDateDDMMYY(campaign.endDate);
         const categories = campaign.targetAudience && campaign.targetAudience.categories ? 
           campaign.targetAudience.categories.map(cat => cat.category).join(', ') : '';
         const tagNumbers = campaign.channels ? 
@@ -4470,7 +4483,7 @@
     function addFilterEventListeners() {
       const filterInputs = [
         'filter-campaign-id', 'filter-campaign-name', 'filter-offers', 
-        'filter-start-date-from', 'filter-start-date-to', 'filter-end-date-from', 'filter-end-date-to',
+        'filter-work-start-date-from', 'filter-work-start-date-to', 'filter-start-date-from', 'filter-start-date-to', 'filter-end-date-from', 'filter-end-date-to',
         'filter-budget-min', 'filter-budget-max', 'filter-status', 'filter-job-assigned-to', 'filter-target-age', 'filter-target-gender',
         'filter-categories', 'filter-goal-sales-min', 'filter-goal-sales-max', 'filter-goal-impressions-min',
         'filter-goal-impressions-max', 'filter-goal-conversions-min', 'filter-goal-conversions-max',
@@ -4491,155 +4504,6 @@
       });
     }
     
-    // Function to apply filters
-    function applyFilters() {
-      if (!originalCampaigns || originalCampaigns.length === 0) return;
-      
-      const tableBody = document.getElementById('campaigns-table-body');
-      const countSpan = document.getElementById('campaigns-count');
-      
-      if (!tableBody) return;
-      
-      // Get filter values
-      const campaignIdFilter = document.getElementById('filter-campaign-id')?.value.toLowerCase() || '';
-      const campaignNameFilter = document.getElementById('filter-campaign-name')?.value.toLowerCase() || '';
-      const offersFilter = document.getElementById('filter-offers')?.value.toLowerCase() || '';
-      const workStartDateFrom = document.getElementById('filter-work-start-date-from')?.value || '';
-      const workStartDateTo = document.getElementById('filter-work-start-date-to')?.value || '';
-      const startDateFrom = document.getElementById('filter-start-date-from')?.value || '';
-      const startDateTo = document.getElementById('filter-start-date-to')?.value || '';
-      const endDateFrom = document.getElementById('filter-end-date-from')?.value || '';
-      const endDateTo = document.getElementById('filter-end-date-to')?.value || '';
-      const budgetMin = document.getElementById('filter-budget-min')?.value || '';
-      const budgetMax = document.getElementById('filter-budget-max')?.value || '';
-      const statusFilter = document.getElementById('filter-status')?.value || '';
-      const jobAssignedToFilter = document.getElementById('filter-job-assigned-to')?.value || '';
-      const targetAgeFilter = document.getElementById('filter-target-age')?.value.toLowerCase() || '';
-      const targetGenderFilter = document.getElementById('filter-target-gender')?.value || '';
-      const categoriesFilter = document.getElementById('filter-categories')?.value || '';
-      const goalSalesMin = document.getElementById('filter-goal-sales-min')?.value || '';
-      const goalSalesMax = document.getElementById('filter-goal-sales-max')?.value || '';
-      const goalImpressionsMin = document.getElementById('filter-goal-impressions-min')?.value || '';
-      const goalImpressionsMax = document.getElementById('filter-goal-impressions-max')?.value || '';
-      const goalConversionsMin = document.getElementById('filter-goal-conversions-min')?.value || '';
-      const goalConversionsMax = document.getElementById('filter-goal-conversions-max')?.value || '';
-      const tagNumbersFilter = document.getElementById('filter-tag-numbers')?.value.toLowerCase() || '';
-      
-      // Filter campaigns
-      const filteredCampaigns = originalCampaigns.filter(campaign => {
-        // Campaign ID filter
-        if (campaignIdFilter && !(campaign.campaignId || '').toLowerCase().includes(campaignIdFilter)) return false;
-        
-        // Campaign Name filter
-        if (campaignNameFilter && !(campaign.name || '').toLowerCase().includes(campaignNameFilter)) return false;
-        
-        // Offers filter
-        if (offersFilter && !(campaign.description || '').toLowerCase().includes(offersFilter)) return false;
-        
-        // Work Start Date filter
-        if (workStartDateFrom && campaign.workStartDate && new Date(campaign.workStartDate) < new Date(workStartDateFrom)) return false;
-        if (workStartDateTo && campaign.workStartDate && new Date(campaign.workStartDate) > new Date(workStartDateTo)) return false;
-        
-        // Start Date filter
-        if (startDateFrom && campaign.startDate && new Date(campaign.startDate) < new Date(startDateFrom)) return false;
-        if (startDateTo && campaign.startDate && new Date(campaign.startDate) > new Date(startDateTo)) return false;
-        
-        // End Date filter
-        if (endDateFrom && campaign.endDate && new Date(campaign.endDate) < new Date(endDateFrom)) return false;
-        if (endDateTo && campaign.endDate && new Date(campaign.endDate) > new Date(endDateTo)) return false;
-        
-        // Budget filter
-        if (budgetMin && (!campaign.budget || campaign.budget < parseFloat(budgetMin))) return false;
-        if (budgetMax && (!campaign.budget || campaign.budget > parseFloat(budgetMax))) return false;
-        
-        // Status filter
-        if (statusFilter && campaign.status !== statusFilter) return false;
-        
-        // Job Assigned To filter
-        if (jobAssignedToFilter && campaign.jobAssignedTo !== jobAssignedToFilter) return false;
-        
-        // Target Age filter
-        if (targetAgeFilter && !(campaign.targetAudience?.age || '').toLowerCase().includes(targetAgeFilter)) return false;
-        
-        // Target Gender filter
-        if (targetGenderFilter && campaign.targetAudience?.gender !== targetGenderFilter) return false;
-        
-        // Categories filter
-        if (categoriesFilter) {
-          const categories = campaign.targetAudience?.categories?.map(cat => cat.category) || [];
-          if (!categories.includes(categoriesFilter)) return false;
-        }
-        
-        // Goal Sales filter
-        if (goalSalesMin && (!campaign.goals?.sales || campaign.goals.sales < parseFloat(goalSalesMin))) return false;
-        if (goalSalesMax && (!campaign.goals?.sales || campaign.goals.sales > parseFloat(goalSalesMax))) return false;
-        
-        // Goal Impressions filter
-        if (goalImpressionsMin && (!campaign.goals?.impressions || campaign.goals.impressions < parseFloat(goalImpressionsMin))) return false;
-        if (goalImpressionsMax && (!campaign.goals?.impressions || campaign.goals.impressions > parseFloat(goalImpressionsMax))) return false;
-        
-        // Goal Conversions filter
-        if (goalConversionsMin && (!campaign.goals?.conversions || campaign.goals.conversions < parseFloat(goalConversionsMin))) return false;
-        if (goalConversionsMax && (!campaign.goals?.conversions || campaign.goals.conversions > parseFloat(goalConversionsMax))) return false;
-        
-        // Tag Numbers filter
-        if (tagNumbersFilter) {
-          const allTagNumbers = campaign.channels ? 
-            campaign.channels.map(channel => channel.tagNumber).filter(tag => tag).join(', ') : '';
-          if (!allTagNumbers.toLowerCase().includes(tagNumbersFilter)) return false;
-        }
-        
-        return true;
-      });
-      
-      // Update count
-      countSpan.textContent = filteredCampaigns.length;
-      
-      // Display filtered campaigns
-      if (filteredCampaigns.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="21" class="text-center text-gray-500 py-4">No campaigns found</td></tr>';
-        return;
-      }
-      
-      let html = '';
-      filteredCampaigns.forEach((campaign, index) => {
-        const workStartDate = campaign.workStartDate ? new Date(campaign.workStartDate).toLocaleDateString() : '';
-        const startDate = campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : '';
-        const endDate = campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : '';
-        const categories = campaign.targetAudience && campaign.targetAudience.categories ? 
-          campaign.targetAudience.categories.map(cat => cat.category).join(', ') : '';
-        const tagNumbers = campaign.channels ? 
-          campaign.channels.map(channel => channel.tagNumber).filter(tag => tag).join(', ') : '';
-        
-        html += `
-          <tr>
-            <td><input type="radio" name="selected_campaign" value="${campaign._id}" class="select-campaign-radio"></td>
-            <td>${index + 1}</td>
-            <td>${campaign.campaignId || ''}</td>
-            <td>${campaign.name || ''}</td>
-            <td>${campaign.description || ''}</td>
-            <td>${workStartDate}</td>
-            <td>${startDate}</td>
-            <td>${endDate}</td>
-            <td>${campaign.budget ? new Intl.NumberFormat().format(campaign.budget) : ''}</td>
-            <td>${campaign.status || ''}</td>
-            <td>${campaign.jobAssignedTo || ''}</td>
-            <td>${campaign.targetAudience?.age || ''}</td>
-            <td>${campaign.targetAudience?.gender || ''}</td>
-            <td>${categories}</td>
-            <td>${campaign.goals && campaign.goals.sales ? new Intl.NumberFormat().format(campaign.goals.sales) : ''}</td>
-            <td>${campaign.goals && campaign.goals.impressions ? new Intl.NumberFormat().format(campaign.goals.impressions) : ''}</td>
-            <td>${campaign.goals && campaign.goals.conversions ? new Intl.NumberFormat().format(campaign.goals.conversions) : ''}</td>
-            <td>${campaign.achieved && campaign.achieved.sales ? new Intl.NumberFormat().format(campaign.achieved.sales) : ''}</td>
-            <td>${campaign.achieved && campaign.achieved.impressions ? new Intl.NumberFormat().format(campaign.achieved.impressions) : ''}</td>
-            <td>${campaign.achieved && campaign.achieved.conversions ? new Intl.NumberFormat().format(campaign.achieved.conversions) : ''}</td>
-            <td>${tagNumbers}</td>
-          </tr>
-        `;
-      });
-      
-      tableBody.innerHTML = html;
-    }
     
     // Function to add edit and delete selected functionality
     function addEditSelectedFunctionality() {
