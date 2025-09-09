@@ -506,6 +506,7 @@
                       <option>All Walkin</option>
                       <option>Social Media</option>
                       <option>Social Groups</option>
+                      <option>Whatsup Groups</option>
                       <option>Corporates</option>
                       <option>Residential Cmty</option>
                       <option>Local Cmty</option>
@@ -1279,6 +1280,7 @@
               <option value="Facebook">Facebook</option>
               <option value="TikTok">TikTok</option>
               <option value="Google">Google</option>
+              <option value="Whatsup group">Whatsup group</option>
               <option value="Other">Other</option>
             </select>
           </div>
@@ -1397,6 +1399,13 @@
                 <option value="Google Performance Max">Google Performance Max</option>
                 <option value="Other">Other</option>
               `;
+            } else if (platform === 'Whatsup group') {
+              options = `
+                <option value="">Select Type</option>
+                <option value="Post">Post</option>
+                <option value="Brochure">Brochure</option>
+                <option value="Others">Others</option>
+              `;
             } else if (platform === 'Other') {
               options = `
                 <option value="">Select Type</option>
@@ -1405,8 +1414,8 @@
             }
             adTypeSelect.innerHTML = options;
             
-            // Add validation for mandatory Type selection for Instagram, Facebook, and TikTok
-            if (platform === 'Instagram' || platform === 'Facebook' || platform === 'TikTok') {
+            // Add validation for mandatory Type selection for Instagram, Facebook, TikTok, and Whatsup group
+            if (platform === 'Instagram' || platform === 'Facebook' || platform === 'TikTok' || platform === 'Whatsup group') {
               adTypeSelect.required = true;
               adTypeSelect.classList.add('border-red-500');
               adTypeSelect.addEventListener('change', function() {
@@ -1704,7 +1713,7 @@
         return;
       }
       
-      // Validate Type selection for Instagram, Facebook, and TikTok platforms
+      // Validate Type selection for Instagram, Facebook, TikTok, and Whatsup group platforms
       const channelEntries = document.querySelectorAll('.channelEntry');
       console.log('Found channel entries:', channelEntries.length);
       
@@ -1717,7 +1726,7 @@
           const adType = entry.querySelector('.channelAdType').value;
           console.log('Platform:', platform, 'AdType:', adType);
           
-          if ((platform === 'Instagram' || platform === 'Facebook' || platform === 'TikTok') && (!adType || adType.trim() === '')) {
+          if ((platform === 'Instagram' || platform === 'Facebook' || platform === 'TikTok' || platform === 'Whatsup group') && (!adType || adType.trim() === '')) {
             console.log('Validation failed for platform:', platform);
             alert(`⚠️ Warning: Please select a Type for ${platform} platform. Type selection is mandatory for social media campaigns.`);
             return;
@@ -2102,26 +2111,27 @@
         div.className = 'targetCategorySelect mb-2 flex items-center gap-2';
         div.innerHTML = `<select class="targetCategory w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
           <option value="">Select Category</option>
-          <option>Tourist</option>
-          <option>Resident</option>
-          <option>All Walkin</option>
-          <option>Social Media</option>
-          <option>Social Groups</option>
-          <option>Corporates</option>
-          <option>Residential Cmty</option>
-          <option>Local Cmty</option>
-          <option>Blue collar wrkrs</option>
-          <option>Existing cutomers</option>
-          <option>HNTW</option>
-          <option>Channel Partner</option>
-          <option>DGJG</option>
-          <option>Hotels</option>
-          <option>Tourism Companies</option>
-          <option>Tour Drivers</option>
-          <option>Other Tours Assctd cmpy</option>
-          <option>Festival & Occasion Buyers</option>
-          <option>Product Launch</option>
-          <option>Other</option>
+                      <option>Tourist</option>
+                      <option>Resident</option>
+                      <option>All Walkin</option>
+                      <option>Social Media</option>
+                      <option>Social Groups</option>
+                      <option>Whatsup Groups</option>
+                      <option>Corporates</option>
+                      <option>Residential Cmty</option>
+                      <option>Local Cmty</option>
+                      <option>Blue collar wrkrs</option>
+                      <option>Existing cutomers</option>
+                      <option>HNTW</option>
+                      <option>Channel Partner</option>
+                      <option>DGJG</option>
+                      <option>Hotels</option>
+                      <option>Tourism Companies</option>
+                      <option>Tour Drivers</option>
+                      <option>Other Tours Assctd cmpy</option>
+                      <option>Festival & Occasion Buyers</option>
+                      <option>Product Launch</option>
+                      <option>Other</option>
         </select><input type="text" class="categoryTag w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Category Tag (optional)"><button type="button" class="removeCategoryBtn hidden text-red-500">✕</button>`;
         catContainer.appendChild(div);
       }
@@ -2895,6 +2905,7 @@
                     <option>All Walkin</option>
                     <option>Social Media</option>
                     <option>Social Groups</option>
+                    <option>What'sup group</option>
                     <option>Corporates</option>
                     <option>Residential Cmty</option>
                     <option>Local Cmty</option>
@@ -3221,6 +3232,7 @@
                 <option${cat.category==='All Walkin'?' selected':''}>All Walkin</option>
                 <option${cat.category==='Social Media'?' selected':''}>Social Media</option>
                 <option${cat.category==='Social Groups'?' selected':''}>Social Groups</option>
+                <option${cat.category==='Whatsup Groups'?' selected':''}>Whatsup Groups</option>
                 <option${cat.category==='Corporates'?' selected':''}>Corporates</option>
                 <option${cat.category==='Residential Cmty'?' selected':''}>Residential Cmty</option>
                 <option${cat.category==='Local Cmty'?' selected':''}>Local Cmty</option>
@@ -3547,6 +3559,7 @@
             <option>All Walkin</option>
             <option>Social Media</option>
             <option>Social Groups</option>
+            <option>What'sup group</option>
             <option>Corporates</option>
             <option>Residential Cmty</option>
             <option>Local Cmty</option>
@@ -3596,6 +3609,10 @@
       }
       
       try {
+        console.log('Frontend sending tag generation request:', { channelType, platform });
+        console.log('Platform type:', typeof platform);
+        console.log('Platform length:', platform ? platform.length : 'null');
+        
         // Use server endpoint to generate unique tag
         const response = await fetch('/api/tags/generate', {
           method: 'POST',

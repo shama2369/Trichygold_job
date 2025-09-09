@@ -765,6 +765,7 @@ app.get('/api/tags/counters', async (req, res) => {
         'FB': 'Facebook', 
         'TT': 'TikTok',
         'GG': 'Google',
+        'WA': 'Whatsup group',
         'OS': 'Other Social',
         'PM': 'Print Media',
         'TV': 'TV',
@@ -801,6 +802,11 @@ app.get('/api/tags/counters', async (req, res) => {
 app.post('/api/tags/generate', async (req, res) => {
   const { channelType, platform } = req.body;
   
+  console.log('Tag generation request:', { channelType, platform });
+  console.log('Platform type:', typeof platform);
+  console.log('Platform length:', platform ? platform.length : 'null');
+  console.log('Platform exact match with Whatsup group:', platform === 'Whatsup group');
+  
   try {
     // Determine prefix based on channel type and platform
     let prefix = '';
@@ -809,9 +815,11 @@ app.post('/api/tags/generate', async (req, res) => {
       else if (platform === 'Facebook') prefix = 'FB';
       else if (platform === 'TikTok') prefix = 'TT';
       else if (platform === 'Google') prefix = 'GG';
+      else if (platform === 'Whatsup group' || platform?.trim() === 'Whatsup group' || platform?.includes('Whatsup')) prefix = 'WA';
       else if (platform === 'Other') prefix = 'OS';
       else {
         // If no platform selected, return error
+        console.log('Unknown platform for Social Media:', platform);
         return res.status(400).json({ error: 'Please select a platform for Social Media' });
       }
     } else if (channelType === 'Print Media') {
