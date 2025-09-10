@@ -1,0 +1,5 @@
+[33m2137549[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add Whatsup group platform support and update category names
+[33m1c36e15[m Fix date formatting and work start date filter
+[33m39d8a7b[m Fix tag generation during edit form population and reset tag counters for production
+[33med3a2c1[m Fix JavaScript issues and improve user management logic
+[33m98f88f9[m Complete rebranding to Marketing Manager with image upload functionality and production-ready counter setup
