@@ -73,17 +73,17 @@ app.get('/health', (req, res) => {
 // Helper function to sync tag counters with actual saved tags
 async function syncTagCounters() {
   try {
-    const campaigns = db.collection('campaigns');
+    const jobs = db.collection('jobcollection');
     const tagCounters = db.collection('tagCounters');
     
-    // Get all campaigns and extract all tag numbers
-    const allCampaigns = await campaigns.find({}).toArray();
+    // Get all jobs and extract all tag numbers
+    const allJobs = await jobs.find({}).toArray();
     const tagNumbersByPrefix = {};
     
     // Collect all tag numbers by prefix
-    allCampaigns.forEach(campaign => {
-      if (campaign.channels && Array.isArray(campaign.channels)) {
-        campaign.channels.forEach(channel => {
+    allJobs.forEach(job => {
+      if (job.channels && Array.isArray(job.channels)) {
+        job.channels.forEach(channel => {
           if (channel.tagNumber && channel.tagNumber.trim() !== '') {
             const prefix = channel.tagNumber.substring(0, 2);
             const numberPart = parseInt(channel.tagNumber.substring(2));
@@ -139,152 +139,62 @@ app.post('/api/tags/sync', async (req, res) => {
   }
 });
 
-// GET: Debug endpoint to check campaign data structure
-app.get('/api/debug/campaigns', async (req, res) => {
+// GET: Debug endpoint to check job data structure
+app.get('/api/debug/jobs', async (req, res) => {
   try {
-    console.log('Debug campaigns endpoint called');
-    const campaigns = db.collection('campaigns');
-    const allCampaigns = await campaigns.find({}).toArray();
+    console.log('Debug jobs endpoint called');
+    const jobs = db.collection('jobcollection');
+    const allJobs = await jobs.find({}).toArray();
     
-    console.log(`Found ${allCampaigns.length} campaigns`);
+    console.log(`Found ${allJobs.length} jobs`);
     
-    // Show simplified campaign data
-    const debugData = allCampaigns.map(campaign => ({
-      campaignId: campaign.campaignId,
-      name: campaign.name,
-      channelsCount: campaign.channels?.length || 0,
-      channels: campaign.channels?.map(channel => ({
-        type: channel.type,
-        platform: channel.platform,
-        impressions: channel.impressions,
-        hasImpressions: channel.hasOwnProperty('impressions')
-      })) || []
+    // Show simplified job data
+    const debugData = allJobs.map(job => ({
+      campaignId: job.campaignId,
+      name: job.name,
+      description: job.description,
+      workStartDate: job.workStartDate,
+      startDate: job.startDate,
+      endDate: job.endDate,
+      budget: job.budget,
+      status: job.status,
+      jobAssignedTo: job.jobAssignedTo
     }));
     
     res.json(debugData);
   } catch (err) {
-    console.error('Error getting debug campaigns:', err);
+    console.error('Error getting debug jobs:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// POST: Create or update campaign with multiple image uploads
-app.post('/api/campaigns', upload.fields([
-  { name: 'campaignImage0', maxCount: 1 },
-  { name: 'campaignImage1', maxCount: 1 },
-  { name: 'campaignImage2', maxCount: 1 },
-  { name: 'campaignImage3', maxCount: 1 },
-  { name: 'campaignImage4', maxCount: 1 },
-  { name: 'campaignImage5', maxCount: 1 },
-  { name: 'campaignImage6', maxCount: 1 },
-  { name: 'campaignImage7', maxCount: 1 },
-  { name: 'campaignImage8', maxCount: 1 },
-  { name: 'campaignImage9', maxCount: 1 }
-]), async (req, res) => {
+// POST: Create or update job
+app.post('/api/jobs', async (req, res) => {
   try {
-    // Parse campaign data from form
-    let campaignData;
+    // Parse job data from form
+    let jobData;
     try {
-      campaignData = JSON.parse(req.body.campaignData);
+      jobData = JSON.parse(req.body.jobData);
     } catch (parseError) {
-      return res.status(400).json({ error: 'Invalid campaign data format' });
+      return res.status(400).json({ error: 'Invalid job data format' });
     }
     
-    console.log('=== CAMPAIGN SUBMISSION DEBUG ===');
-    console.log('Campaign data received:', JSON.stringify(campaignData, null, 2));
-    
-    // Handle multiple image uploads
-    if (req.files) {
-      const images = [];
-      Object.keys(req.files).forEach(fieldName => {
-        if (req.files[fieldName] && req.files[fieldName][0]) {
-          images.push(`/uploads/${req.files[fieldName][0].filename}`);
-        }
-      });
-      if (images.length > 0) {
-        campaignData.images = images;
-        console.log('Images uploaded:', images);
-      }
-    }
-    
-    if (campaignData.channels && Array.isArray(campaignData.channels)) {
-      console.log('Channels found:', campaignData.channels.length);
-      campaignData.channels.forEach((channel, index) => {
-        console.log(`Channel ${index + 1}:`, {
-          type: channel.type,
-          platform: channel.platform,
-          impressions: channel.impressions,
-          hasImpressions: channel.hasOwnProperty('impressions')
-        });
-      });
-    } else {
-      console.log('No channels found in campaign data');
-    }
-    
-    // Validate tag numbers for uniqueness
-    if (campaignData.channels && Array.isArray(campaignData.channels)) {
-      const tagNumbers = campaignData.channels
-        .map(channel => channel.tagNumber)
-        .filter(tag => tag && tag.trim() !== '');
-      
-      if (tagNumbers.length > 0) {
-        // Check for duplicates within the same campaign
-        const uniqueTags = new Set(tagNumbers);
-        if (uniqueTags.size !== tagNumbers.length) {
-          return res.status(400).json({ 
-            error: 'Duplicate tag numbers found within the campaign. Each tag number must be unique.' 
-          });
-        }
-        
-        // Check for duplicates across all existing campaigns (excluding current campaign if updating)
-        const campaigns = db.collection('campaigns');
-        const existingCampaigns = await campaigns.find({}).toArray();
-        const existingTags = new Set();
-        
-        console.log(`Create: Checking tag uniqueness for new campaign`);
-        console.log(`Create: New campaign has tags: ${tagNumbers.join(', ')}`);
-        
-        existingCampaigns.forEach(campaign => {
-          // For CREATE: include all campaigns (campaignData.campaignId is undefined)
-          if (campaign.channels && Array.isArray(campaign.channels)) {
-            campaign.channels.forEach(channel => {
-              if (channel.tagNumber) {
-                existingTags.add(channel.tagNumber);
-              }
-            });
-          }
-        });
-        
-        console.log(`Create: Found existing tags from other campaigns: ${Array.from(existingTags).join(', ')}`);
-        
-        const duplicateTags = tagNumbers.filter(tag => existingTags.has(tag));
-        if (duplicateTags.length > 0) {
-          console.log(`Create: Duplicate tags found: ${duplicateTags.join(', ')}`);
-          return res.status(400).json({ 
-            error: `Tag number(s) already exist: ${duplicateTags.join(', ')}. Each tag number must be globally unique.` 
-          });
-        }
-        
-        console.log(`Create: All tags are unique, proceeding with creation`);
-      }
-    }
+    console.log('=== JOB SUBMISSION DEBUG ===');
+    console.log('Job data received:', JSON.stringify(jobData, null, 2));
     
     // Generate campaignId if not provided
-    if (!campaignData.campaignId) {
-      campaignData.campaignId = await getNextCampaignId();
+    if (!jobData.campaignId) {
+      jobData.campaignId = await getNextCampaignId();
     }
     
-    const campaigns = db.collection('campaigns');
-    await campaigns.updateOne(
-      { campaignId: campaignData.campaignId },
-      { $set: campaignData },
+    const jobs = db.collection('jobcollection');
+    await jobs.updateOne(
+      { campaignId: jobData.campaignId },
+      { $set: jobData },
       { upsert: true }
     );
-
-    // Sync tag counters after save to ensure consistency
-    await syncTagCounters();
     
-    res.status(200).json({ message: 'Campaign saved successfully', campaignId: campaignData.campaignId });
+    res.status(200).json({ message: 'Job saved successfully', campaignId: jobData.campaignId });
   } catch (err) {
     console.error('Error saving campaign:', err);
     res.status(500).json({ error: 'Server error' });
@@ -320,7 +230,7 @@ app.put('/api/campaigns/:campaignId', async (req, res) => {
         }
         
         // Check for duplicates across all existing campaigns (excluding current campaign)
-        const campaigns = db.collection('campaigns');
+        const campaigns = db.collection('jobcollection');
         const existingCampaigns = await campaigns.find({}).toArray();
         const existingTags = new Set();
         
@@ -354,7 +264,7 @@ app.put('/api/campaigns/:campaignId', async (req, res) => {
       }
     }
     
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const result = await campaigns.updateOne(
       { _id: new ObjectId(campaignId) },
       { $set: campaignData },
@@ -378,15 +288,61 @@ app.put('/api/campaigns/:campaignId', async (req, res) => {
   }
 });
 
-// GET: Retrieve all campaigns
+// GET: Retrieve all jobs
+app.get('/api/jobs', async (req, res) => {
+  console.log('Received GET request for all jobs (/api/jobs)');
+  try {
+    const jobs = db.collection('jobcollection');
+    const allJobs = await jobs.find().toArray();
+    res.status(200).json(allJobs);
+  } catch (err) {
+    console.error('Error retrieving jobs:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET: Retrieve all campaigns (backward compatibility)
 app.get('/api/campaigns', async (req, res) => {
   console.log('Received GET request for all campaigns (/api/campaigns)');
   try {
-    const campaigns = db.collection('campaigns');
-    const allCampaigns = await campaigns.find().toArray();
-    res.status(200).json(allCampaigns);
+    const jobs = db.collection('jobcollection');
+    const allJobs = await jobs.find().toArray();
+    res.status(200).json(allJobs);
   } catch (err) {
     console.error('Error retrieving campaigns:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST: Create or update campaign (backward compatibility)
+app.post('/api/campaigns', async (req, res) => {
+  try {
+    // Parse job data from form
+    let jobData;
+    try {
+      jobData = JSON.parse(req.body.campaignData || req.body.jobData);
+    } catch (parseError) {
+      return res.status(400).json({ error: 'Invalid job data format' });
+    }
+    
+    console.log('=== JOB SUBMISSION DEBUG (via campaigns endpoint) ===');
+    console.log('Job data received:', JSON.stringify(jobData, null, 2));
+    
+    // Generate campaignId if not provided
+    if (!jobData.campaignId) {
+      jobData.campaignId = await getNextCampaignId();
+    }
+    
+    const jobs = db.collection('jobcollection');
+    await jobs.updateOne(
+      { campaignId: jobData.campaignId },
+      { $set: jobData },
+      { upsert: true }
+    );
+    
+    res.status(200).json({ message: 'Job saved successfully', campaignId: jobData.campaignId });
+  } catch (err) {
+    console.error('Error saving job:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -396,7 +352,7 @@ app.get('/api/campaigns', async (req, res) => {
 app.get('/api/campaigns/tag/:tagNumber', async (req, res) => {
   try {
     const tagNumber = req.params.tagNumber;
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     
     const campaignsWithTag = await campaigns.find({
       'channels.tagNumber': tagNumber
@@ -427,7 +383,7 @@ app.get('/api/campaigns/tag/:tagNumber', async (req, res) => {
 app.get('/api/campaigns/:campaignId/export', async (req, res) => {
   const campaignId = req.params.campaignId;
   try {
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const campaign = await campaigns.findOne({ campaignId });
     if (!campaign) {
       return res.status(404).json({ error: 'Campaign not found' });
@@ -500,7 +456,7 @@ app.get('/api/campaigns/:campaignId/export', async (req, res) => {
 app.get('/api/campaigns/export', async (req, res) => {
   console.log('Received GET request for Excel export (/api/campaigns/export)');
   try {
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const data = await campaigns.find().toArray();
     
     if (data.length === 0) {
@@ -578,7 +534,7 @@ app.get('/api/campaigns/tag/:tagNumber', async (req, res) => {
   const tagNumber = req.params.tagNumber;
   console.log(`Searching for campaigns with tag number: ${tagNumber}`);
   try {
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const matchingCampaigns = await campaigns.find({
       'channels.tagNumber': tagNumber
     }).toArray();
@@ -605,7 +561,7 @@ app.get('/api/campaigns/:campaignId', async (req, res) => {
   console.log(`Received GET request for campaignId: ${req.params.campaignId}`);
   try {
     const campaignId = req.params.campaignId;
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const campaign = await campaigns.findOne({ campaignId });
     if (campaign) {
       res.status(200).json(campaign);
@@ -623,7 +579,7 @@ app.delete('/api/campaigns/:campaignId', async (req, res) => {
   console.log(`Received DELETE request for campaignId: ${req.params.campaignId}`);
   try {
     const campaignId = req.params.campaignId;
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     
     // Delete the campaign by MongoDB _id
     const result = await campaigns.deleteOne({ _id: new ObjectId(campaignId) });
@@ -649,7 +605,7 @@ app.put('/api/campaigns/impressions/:tagNumber', async (req, res) => {
   console.log(`Updating impressions for tag ${tagNumber} to ${impressions}`);
   
   try {
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     
     // Validate impressions is a number
     if (typeof impressions !== 'number' || impressions < 0) {
@@ -692,7 +648,7 @@ app.put('/api/campaigns/:campaignId/channels/:channelIndex/impressions', async (
   console.log(`Updating impressions for campaign ${campaignId}, channel ${channelIndex} to ${impressions}`);
   
   try {
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     
     // Validate impressions is a number
     if (typeof impressions !== 'number' || impressions < 0) {
@@ -728,7 +684,7 @@ app.put('/api/campaigns/:campaignId/channels/:channelIndex/impressions', async (
 // GET: Get all unique tag numbers
 app.get('/api/tags', async (req, res) => {
   try {
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const allCampaigns = await campaigns.find({}).toArray();
     
     const tags = new Set();
@@ -861,7 +817,7 @@ app.post('/api/tags/generate', async (req, res) => {
     const newTagNumber = `${prefix}${String(nextNumber).padStart(4, '0')}`;
     
     // Check if this tag number already exists in any campaign
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const existingTag = await campaigns.findOne({
       'channels.tagNumber': newTagNumber
     });
@@ -915,7 +871,7 @@ app.post('/api/tags/generate', async (req, res) => {
 app.get('/api/impressions/stats', async (req, res) => {
   try {
     console.log('Impression stats endpoint called'); // Debug log
-    const campaigns = db.collection('campaigns');
+    const campaigns = db.collection('jobcollection');
     const allCampaigns = await campaigns.find({}).toArray();
     console.log('Found campaigns:', allCampaigns.length); // Debug log
     
@@ -1025,9 +981,9 @@ async function setupDatabase() {
       console.log(`Attempting to connect to MongoDB (Retries left: ${retries})...`);
       await client.connect();
       console.log('Connected to MongoDB');
-      db = client.db('event_campaign_db');
-      const campaigns = db.collection('campaigns');
-      await campaigns.createIndex({ campaignId: 1 }, { unique: true });
+      db = client.db('job_db');
+      const jobs = db.collection('jobcollection');
+      await jobs.createIndex({ campaignId: 1 }, { unique: true });
       console.log('Unique index on campaignId created');
       const tagCounters = db.collection('tagCounters');
       await tagCounters.createIndex({ prefix: 1 }, { unique: true });
