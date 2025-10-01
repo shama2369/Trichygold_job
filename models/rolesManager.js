@@ -13,6 +13,7 @@ class RolesManager {
       export_data: false,
       manage_users: false,
       manage_roles: false,
+      manage_employees: false,
       generate_tags: false,
       manage_channels: false
     };
@@ -241,6 +242,7 @@ class RolesManager {
             export_data: true,
             manage_users: true,
             manage_roles: true,
+            manage_employees: true,
             generate_tags: true,
             manage_channels: true
           }
@@ -257,6 +259,7 @@ class RolesManager {
             export_data: true,
             manage_users: false,
             manage_roles: false,
+            manage_employees: false,
             generate_tags: false,
             manage_channels: false
           }
@@ -273,6 +276,7 @@ class RolesManager {
             export_data: false,
             manage_users: false,
             manage_roles: false,
+            manage_employees: false,
             generate_tags: false,
             manage_channels: false
           }
@@ -302,6 +306,7 @@ class RolesManager {
       { key: 'export_data', label: 'Export Data' },
       { key: 'manage_users', label: 'Manage Users' },
       { key: 'manage_roles', label: 'Manage Roles' },
+      { key: 'manage_employees', label: 'Manage Employees' },
       { key: 'generate_tags', label: 'Generate Tags' },
       { key: 'manage_channels', label: 'Manage Channels' }
     ];

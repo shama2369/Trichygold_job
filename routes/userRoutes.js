@@ -7,6 +7,31 @@ const RolesManager = require('../models/rolesManager');
 
 const router = express.Router();
 
+// Authentication middleware
+const verifyToken = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = Buffer.from(token, 'base64').toString();
+    const [userId] = decoded.split(':');
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Add user ID to request for use in route handlers
+    req.user = { userId: userId };
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
 // Initialize default roles on startup
 router.use(async (req, res, next) => {
   if (req.app.locals.db) {
@@ -16,11 +41,11 @@ router.use(async (req, res, next) => {
 });
 
 // CREATE user
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   try {
-    const { username, password, email, roles } = req.body;
-    if (!username || !password || !email) {
-      return res.status(400).json({ error: 'username, password, and email are required' });
+    const { username, password, roles } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'username and password are required' });
     }
     
     // Hash the password before storing
@@ -38,7 +63,7 @@ router.post('/', async (req, res) => {
       }
     }
 
-    const user = new User({ username, password: hashedPassword, email, roles: roles || [] });
+    const user = new User({ username, password: hashedPassword, roles: roles || [] });
     const db = req.app.locals.db;
     await db.collection('users').insertOne(user);
     res.status(201).json({ message: 'User created', user });
@@ -48,7 +73,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET all users
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   console.log('Received GET request for all users (/api/users)');
   try {
     const db = req.app.locals.db;
@@ -80,7 +105,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET user by id
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     const user = await db.collection('users').findOne({ _id: new ObjectId(req.params.id) });
@@ -92,7 +117,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // UPDATE user roles
-router.put('/:id/roles', async (req, res) => {
+router.put('/:id/roles', verifyToken, async (req, res) => {
   try {
     const { roles } = req.body;
     if (!Array.isArray(roles)) {
@@ -110,7 +135,7 @@ router.put('/:id/roles', async (req, res) => {
 
     const result = await db.collection('users').updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { roles } }
+      { $set: { roles, updated_at: new Date() } }
     );
     if (result.matchedCount === 0) return res.status(404).json({ error: 'User not found' });
     res.json({ message: 'Roles updated' });
@@ -120,7 +145,7 @@ router.put('/:id/roles', async (req, res) => {
 });
 
 // DELETE user
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     const result = await db.collection('users').deleteOne({ _id: new ObjectId(req.params.id) });
@@ -134,7 +159,7 @@ router.delete('/:id', async (req, res) => {
 // ROLE MANAGEMENT ENDPOINTS
 
 // GET all roles
-router.get('/roles/all', async (req, res) => {
+router.get('/roles/all', verifyToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     const roles = await RolesManager.getAllRoles(db);
@@ -145,7 +170,7 @@ router.get('/roles/all', async (req, res) => {
 });
 
 // GET available permissions
-router.get('/roles/permissions/available', (req, res) => {
+router.get('/roles/permissions/available', verifyToken, (req, res) => {
   try {
     const permissions = RolesManager.getAvailablePermissions();
     res.json(permissions);
@@ -155,7 +180,7 @@ router.get('/roles/permissions/available', (req, res) => {
 });
 
 // GET role descriptions (for dropdowns and lists)
-router.get('/roles/descriptions', async (req, res) => {
+router.get('/roles/descriptions', verifyToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     const roles = await RolesManager.getAllRoles(db);
@@ -170,7 +195,7 @@ router.get('/roles/descriptions', async (req, res) => {
 });
 
 // POST new role
-router.post('/roles', async (req, res) => {
+router.post('/roles', verifyToken, async (req, res) => {
   try {
     const { name, description, permissions } = req.body;
     if (!name || typeof name !== 'string') {
@@ -186,7 +211,7 @@ router.post('/roles', async (req, res) => {
 });
 
 // POST get user permissions from role IDs
-router.post('/permissions', async (req, res) => {
+router.post('/permissions', verifyToken, async (req, res) => {
   try {
     const { roleIds } = req.body;
     if (!Array.isArray(roleIds)) {
@@ -202,7 +227,7 @@ router.post('/permissions', async (req, res) => {
 });
 
 // PUT update role
-router.put('/roles/:id', async (req, res) => {
+router.put('/roles/:id', verifyToken, async (req, res) => {
   try {
     const { name, description, permissions } = req.body;
     const db = req.app.locals.db;
@@ -214,7 +239,7 @@ router.put('/roles/:id', async (req, res) => {
 });
 
 // DELETE role
-router.delete('/roles/:id', async (req, res) => {
+router.delete('/roles/:id', verifyToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     await RolesManager.deleteRole(db, req.params.id);
@@ -225,7 +250,7 @@ router.delete('/roles/:id', async (req, res) => {
 });
 
 // GET role by ID (must be last to avoid conflicts)
-router.get('/roles/:id', async (req, res) => {
+router.get('/roles/:id', verifyToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     const role = await RolesManager.getRoleById(db, req.params.id);
@@ -239,7 +264,7 @@ router.get('/roles/:id', async (req, res) => {
 // PERMISSION CHECKING ENDPOINTS
 
 // Check if user has specific permission
-router.get('/permissions/:userId/:permission', async (req, res) => {
+router.get('/permissions/:userId/:permission', verifyToken, async (req, res) => {
   try {
     const { userId, permission } = req.params;
     const db = req.app.locals.db;
@@ -251,7 +276,7 @@ router.get('/permissions/:userId/:permission', async (req, res) => {
 });
 
 // Get all user permissions
-router.get('/permissions/:userId', async (req, res) => {
+router.get('/permissions/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const db = req.app.locals.db;

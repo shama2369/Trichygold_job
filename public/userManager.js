@@ -5,40 +5,69 @@ const apiBase = '/api/users';
 let currentUserRoles = [];
 
 async function fetchUsers() {
-  const res = await fetch(apiBase);
+  const token = localStorage.getItem('authToken');
+  const res = await fetch(apiBase, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return res.json();
 }
 
 async function fetchRoles() {
-  const res = await fetch(apiBase + '/roles/all');
+  const token = localStorage.getItem('authToken');
+  const res = await fetch(apiBase + '/roles/all', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return res.json();
 }
 
 async function fetchRoleDescriptions() {
-  const res = await fetch(apiBase + '/roles/descriptions');
+  const token = localStorage.getItem('authToken');
+  const res = await fetch(apiBase + '/roles/descriptions', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return res.json();
 }
 
 async function createUser(user) {
+  const token = localStorage.getItem('authToken');
   const res = await fetch(apiBase, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify(user)
   });
   return res.json();
 }
 
 async function updateUserRoles(id, roles) {
+  const token = localStorage.getItem('authToken');
   const res = await fetch(`${apiBase}/${id}/roles`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify({ roles })
   });
   return res.json();
 }
 
 async function deleteUser(id) {
-  const res = await fetch(`${apiBase}/${id}`, { method: 'DELETE' });
+  const token = localStorage.getItem('authToken');
+  const res = await fetch(`${apiBase}/${id}`, { 
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return res.json();
 }
 
@@ -55,16 +84,16 @@ function canManageRoles() {
   return window.sessionManager ? window.sessionManager.canManageRoles() : false;
 }
 
-function canCreateCampaigns() {
-  return window.sessionManager ? window.sessionManager.canCreateCampaigns() : false;
+function canCreateJobs() {
+  return window.sessionManager ? window.sessionManager.canCreateJobs() : false;
 }
 
-function canEditCampaigns() {
-  return window.sessionManager ? window.sessionManager.canEditCampaigns() : false;
+function canEditJobs() {
+  return window.sessionManager ? window.sessionManager.canEditJobs() : false;
 }
 
-function canDeleteCampaigns() {
-  return window.sessionManager ? window.sessionManager.canDeleteCampaigns() : false;
+function canDeleteJobs() {
+  return window.sessionManager ? window.sessionManager.canDeleteJobs() : false;
 }
 
 function canViewReports() {
@@ -75,13 +104,6 @@ function canExportData() {
   return window.sessionManager ? window.sessionManager.canExportData() : false;
 }
 
-function canGenerateTags() {
-  return window.sessionManager ? window.sessionManager.canGenerateTags() : false;
-}
-
-function canManageChannels() {
-  return window.sessionManager ? window.sessionManager.canManageChannels() : false;
-}
 
 // UI rendering
 async function renderUsersTable() {
@@ -95,7 +117,12 @@ async function renderUsersTable() {
   }
   
   try {
-    const response = await fetch(apiBase);
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(apiBase, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     const users = await response.json();
     console.log('[DEBUG] Users fetched:', users);
     if (Array.isArray(users)) {
@@ -108,7 +135,6 @@ async function renderUsersTable() {
           const roleNames = user.roleNames && user.roleNames.length > 0 ? user.roleNames.join(', ') : 'No roles assigned';
         tr.innerHTML = `
           <td><b>${user.username}</b></td>
-            <td>${user.email || 'No email'}</td>
             <td>${roleNames}</td>
           <td>
               <button style="background:#FFC107;color:#222;font-weight:bold;border:none;padding:6px 18px;border-radius:6px;cursor:pointer;margin-right:6px;" onclick="showEditRoles('${user._id}')">Edit Roles</button>
@@ -131,7 +157,12 @@ async function renderUsersTable() {
 
 async function renderRolesOptions(select, selectedRoles = []) {
   try {
-    const response = await fetch(apiBase + '/roles/all');
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(apiBase + '/roles/all', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     const roles = await response.json();
     if (Array.isArray(roles)) {
       select.innerHTML = '';
@@ -203,14 +234,13 @@ async function handleCreateUser(e) {
   e.preventDefault();
   const username = document.getElementById('newUserUsername').value.trim();
   const password = document.getElementById('newUserPassword').value;
-  const email = document.getElementById('newUserEmail').value.trim();
   const select = document.getElementById('newUserRoles');
   const roles = Array.from(select.selectedOptions).map(opt => opt.value);
-  if (!username || !password || !email) {
-    alert('Username, password, and email are required');
+  if (!username || !password) {
+    alert('Username and password are required');
     return;
   }
-  const result = await createUser({ username, password, email, roles });
+  const result = await createUser({ username, password, roles });
   if (result.error) {
     alert(result.error);
     return;
@@ -230,9 +260,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Button and section references
   const addUserBtn = document.getElementById('addUserBtn');
+  const addRoleBtn = document.getElementById('addRoleBtn');
   const manageRolesBtn = document.getElementById('manageRolesBtn');
   const toggleUserBtn = document.getElementById('toggleUserBtn');
   const toggleRoleBtn = document.getElementById('toggleRoleBtn');
+  const toggleEmployeeBtn = document.getElementById('toggleEmployeeBtn');
   const cancelCreateUserBtn = document.getElementById('cancelCreateUserBtn');
   const editRolesCancelBtn = document.getElementById('editRolesCancelBtn');
   const editRolesSaveBtn = document.getElementById('editRolesSaveBtn');
@@ -242,15 +274,18 @@ document.addEventListener('DOMContentLoaded', function () {
   // Section references
   const userSection = document.getElementById('user-manager-user-section');
   const roleSection = document.getElementById('user-manager-role-section');
+  const employeeSection = document.getElementById('user-manager-employee-section');
   const userTableSection = document.getElementById('user-table-section');
   const userCreateFormSection = document.getElementById('user-create-form-section');
 
   // Debug logs for all buttons
   console.log('[DEBUG] Button/Section presence:', {
     addUserBtn: !!addUserBtn,
+    addRoleBtn: !!addRoleBtn,
     manageRolesBtn: !!manageRolesBtn,
     toggleUserBtn: !!toggleUserBtn,
     toggleRoleBtn: !!toggleRoleBtn,
+    toggleEmployeeBtn: !!toggleEmployeeBtn,
     cancelCreateUserBtn: !!cancelCreateUserBtn,
     editRolesCancelBtn: !!editRolesCancelBtn,
     editRolesSaveBtn: !!editRolesSaveBtn,
@@ -272,7 +307,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     try {
-      const res = await fetch(apiBase + '/roles/all');
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(apiBase + '/roles/all', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const roles = await res.json();
       const rolesList = document.getElementById('roles-list');
       if (Array.isArray(roles)) {
@@ -318,7 +358,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     try {
-      const res = await fetch(apiBase + '/roles/all');
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(apiBase + '/roles/all', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const roles = await res.json();
       const tableBody = document.getElementById('roles-table-body');
       if (Array.isArray(roles)) {
@@ -350,10 +395,13 @@ document.addEventListener('DOMContentLoaded', function () {
   function showUserSection() {
     userSection.classList.remove('hidden');
     roleSection.classList.add('hidden');
+    employeeSection.classList.add('hidden');
     toggleUserBtn.classList.add('btn-primary');
     toggleUserBtn.classList.remove('btn-secondary');
     toggleRoleBtn.classList.add('btn-secondary');
     toggleRoleBtn.classList.remove('btn-primary');
+    toggleEmployeeBtn.classList.add('btn-secondary');
+    toggleEmployeeBtn.classList.remove('btn-primary');
     userTableSection.classList.remove('hidden');
     userCreateFormSection.classList.add('hidden');
     renderUsersTable();
@@ -362,10 +410,13 @@ document.addEventListener('DOMContentLoaded', function () {
   function showRoleSection() {
     userSection.classList.add('hidden');
     roleSection.classList.remove('hidden');
+    employeeSection.classList.add('hidden');
     toggleUserBtn.classList.add('btn-secondary');
     toggleUserBtn.classList.remove('btn-primary');
     toggleRoleBtn.classList.add('btn-primary');
     toggleRoleBtn.classList.remove('btn-secondary');
+    toggleEmployeeBtn.classList.add('btn-secondary');
+    toggleEmployeeBtn.classList.remove('btn-primary');
     // Show roles table by default, hide create form
     document.getElementById('role-create-form-container').classList.add('hidden');
     document.getElementById('roles-table-container').classList.remove('hidden');
@@ -373,7 +424,61 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('[DEBUG] Showing Role section (table)');
   }
   
+  function showEmployeeSection() {
+    // Check permission
+    if (window.sessionManager && !window.sessionManager.canManageEmployees()) {
+      window.sessionManager.showPermissionDenied('manage_employees');
+      return;
+    }
+    
+    userSection.classList.add('hidden');
+    roleSection.classList.add('hidden');
+    employeeSection.classList.remove('hidden');
+    toggleUserBtn.classList.add('btn-secondary');
+    toggleUserBtn.classList.remove('btn-primary');
+    toggleRoleBtn.classList.add('btn-secondary');
+    toggleRoleBtn.classList.remove('btn-primary');
+    toggleEmployeeBtn.classList.add('btn-primary');
+    toggleEmployeeBtn.classList.remove('btn-secondary');
+    // Load employees when section is shown
+    console.log('[DEBUG] Employee section shown, checking loadEmployees function...');
+    console.log('[DEBUG] typeof loadEmployees:', typeof loadEmployees);
+    if (typeof loadEmployees === 'function') {
+      console.log('[DEBUG] Calling loadEmployees...');
+      loadEmployees();
+    } else {
+      console.log('[DEBUG] loadEmployees function not found, trying window.loadEmployees...');
+      if (typeof window.loadEmployees === 'function') {
+        console.log('[DEBUG] Calling window.loadEmployees...');
+        window.loadEmployees();
+      } else {
+        console.log('[DEBUG] window.loadEmployees also not found');
+      }
+    }
+    
+    // Ensure employee form event listener is attached
+    const createEmployeeForm = document.getElementById('createEmployeeForm');
+    if (createEmployeeForm) {
+      console.log('[DEBUG] Re-attaching event listener to employee form');
+      // Remove existing listener if any
+      createEmployeeForm.removeEventListener('submit', window.handleCreateEmployee);
+      // Add new listener
+      createEmployeeForm.addEventListener('submit', window.handleCreateEmployee);
+    } else {
+      console.log('[DEBUG] Employee form not found in showEmployeeSection!');
+    }
+    
+    console.log('[DEBUG] Showing Employee section');
+  }
+  
   function showRoleCreateForm() {
+    // Check permission
+    if (window.sessionManager && !window.sessionManager.canManageRoles()) {
+      window.sessionManager.showPermissionDenied('manage_roles');
+      return;
+    }
+    
+    console.log('[DEBUG] showRoleCreateForm called');
     userSection.classList.add('hidden');
     roleSection.classList.remove('hidden');
     toggleUserBtn.classList.add('btn-secondary');
@@ -381,11 +486,21 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleRoleBtn.classList.add('btn-primary');
     toggleRoleBtn.classList.remove('btn-secondary');
     // Show create form, hide roles table
-    document.getElementById('role-create-form-container').classList.remove('hidden');
-    document.getElementById('roles-table-container').classList.add('hidden');
+    const formContainer = document.getElementById('role-create-form-container');
+    const tableContainer = document.getElementById('roles-table-container');
+    console.log('[DEBUG] Form container found:', !!formContainer);
+    console.log('[DEBUG] Table container found:', !!tableContainer);
+    if (formContainer) formContainer.classList.remove('hidden');
+    if (tableContainer) tableContainer.classList.add('hidden');
     console.log('[DEBUG] Showing Role creation form');
   }
   function showUserCreateForm() {
+    // Check permission
+    if (window.sessionManager && !window.sessionManager.canManageUsers()) {
+      window.sessionManager.showPermissionDenied('user_manager');
+      return;
+    }
+    
     userTableSection.classList.add('hidden');
     userCreateFormSection.classList.remove('hidden');
     renderRolesOptions(document.getElementById('newUserRoles'));
@@ -405,6 +520,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (toggleRoleBtn) toggleRoleBtn.onclick = showRoleSection;
   else console.error('[ERROR] toggleRoleBtn not found!');
+
+  if (toggleEmployeeBtn) toggleEmployeeBtn.onclick = showEmployeeSection;
+  else console.error('[ERROR] toggleEmployeeBtn not found!');
 
   if (cancelCreateUserBtn) cancelCreateUserBtn.onclick = showUserSection;
   else console.error('[ERROR] cancelCreateUserBtn not found!');
@@ -444,9 +562,8 @@ document.addEventListener('DOMContentLoaded', function () {
       
       // Initialize all permissions to false
       const allPermissions = [
-        'create_campaigns', 'edit_campaigns', 'delete_campaigns', 'view_campaigns',
-        'view_reports', 'export_data', 'manage_users', 'manage_roles', 
-        'generate_tags', 'manage_channels'
+        'create_jobs', 'edit_jobs', 'delete_jobs', 'view_jobs',
+        'view_reports', 'export_data', 'manage_users', 'manage_roles', 'manage_employees'
       ];
       
       allPermissions.forEach(perm => {
@@ -465,9 +582,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const url = isEditMode ? `${apiBase}/roles/${roleId}` : `${apiBase}/roles`;
         const method = isEditMode ? 'PUT' : 'POST';
         
+        const token = localStorage.getItem('authToken');
         const res = await fetch(url, {
           method: method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ 
             name: roleName, 
             description: roleDescription,
@@ -481,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Reset form
         createRoleForm.reset();
         // Reset checkboxes to default state
-        document.getElementById('perm_view_campaigns').checked = true;
+        document.getElementById('perm_view_jobs').checked = true;
         
         // Reset form mode
         createRoleForm.dataset.editMode = 'false';
@@ -536,7 +657,12 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('[DEBUG] Edit role:', roleId);
     try {
       // Fetch the role data
-      const res = await fetch(`${apiBase}/roles/${roleId}`);
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`${apiBase}/roles/${roleId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const role = await res.json();
       
       if (role.error) {
@@ -584,8 +710,12 @@ document.addEventListener('DOMContentLoaded', function () {
     
     console.log('[DEBUG] Delete role:', roleId);
     try {
+      const token = localStorage.getItem('authToken');
       const res = await fetch(`${apiBase}/roles/${roleId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       const result = await res.json();

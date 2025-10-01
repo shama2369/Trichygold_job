@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trichy Gold Job Management App - Employee Training</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .presentation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .slide {
+            display: none;
+            padding: 60px;
+            min-height: 600px;
+            position: relative;
+        }
+        .slide.active {
+            display: block;
+        }
+        .slide h1 {
+            color: #6B46C1;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 3px solid #6B46C1;
+            padding-bottom: 20px;
+        }
+        .slide h2 {
+            color: #4C1D95;
+            font-size: 2em;
+            margin-bottom: 25px;
+        }
+        .slide h3 {
+            color: #7C3AED;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .feature-card {
+            background: #F8FAFC;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #6B46C1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .feature-card h4 {
+            color: #4C1D95;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .feature-card p {
+            color: #64748B;
+            line-height: 1.6;
+        }
+        .icon {
+            font-size: 2em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .step-list {
+            background: #F1F5F9;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .step-list ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .step-list li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .highlight {
+            background: #FEF3C7;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #F59E0B;
+            margin: 20px 0;
+        }
+        .warning {
+            background: #FEE2E2;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #EF4444;
+            margin: 20px 0;
+        }
+        .success {
+            background: #D1FAE5;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #10B981;
+            margin: 20px 0;
+        }
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .nav-btn {
+            background: #6B46C1;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: #4C1D95;
+            transform: translateY(-2px);
+        }
+        .nav-btn:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .slide-counter {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .screenshot {
+            max-width: 100%;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .permission-badge {
+            display: inline-block;
+            background: #6B46C1;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin: 2px;
+        }
+        .admin { background: #DC2626; }
+        .editor { background: #F59E0B; }
+        .viewer { background: #10B981; }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <h1>🎯 Trichy Gold Job Management App</h1>
+            <div style="text-align: center; margin: 40px 0;">
+                <div style="font-size: 1.5em; color: #6B46C1; margin-bottom: 30px;">
+                    <strong>Streamline Your Work • Track Progress • Achieve Excellence</strong>
+                </div>
+                <div style="font-size: 1.2em; color: #64748B;">
+                    A comprehensive solution for managing jobs, tracking performance, and team collaboration
+                </div>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <span class="icon">📊</span>
+                    <h4>Job Tracking</h4>
+                    <p>Complete job lifecycle management from creation to completion</p>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">👥</span>
+                    <h4>Team Management</h4>
+                    <p>Assign jobs to employees and track team performance</p>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">📱</span>
+                    <h4>WhatsApp Notifications</h4>
+                    <p>Real-time updates via WhatsApp when jobs are assigned or updated</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: User Roles & Permissions -->
+        <div class="slide">
+            <h1>👤 User Roles & Permissions</h1>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4><span class="permission-badge admin">ADMIN</span> Full Access</h4>
+                    <ul>
+                        <li>✅ Create, edit, and delete jobs</li>
+                        <li>✅ Manage users and roles</li>
+                        <li>✅ Manage employees</li>
+                        <li>✅ View all reports and analytics</li>
+                        <li>✅ Export data to Excel</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4><span class="permission-badge editor">EDITOR</span> Edit Access</h4>
+                    <ul>
+                        <li>✅ Create and edit jobs</li>
+                        <li>✅ View reports and analytics</li>
+                        <li>✅ Export data to Excel</li>
+                        <li>❌ Cannot delete jobs</li>
+                        <li>❌ Cannot manage users</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4><span class="permission-badge viewer">VIEWER</span> Read Only</h4>
+                    <ul>
+                        <li>✅ View jobs and reports</li>
+                        <li>❌ Cannot create, edit, or delete</li>
+                        <li>❌ Cannot manage users or employees</li>
+                        <li>❌ Cannot export data</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight">
+                <strong>🔐 Security:</strong> Your access level is determined by your role. If you try to access a restricted feature, you'll see a permission denied message.
+            </div>
+        </div>
+
+        <!-- Slide 3: Main Features Overview -->
+        <div class="slide">
+            <h1>🚀 Main Features</h1>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <span class="icon">📋</span>
+                    <h4>Job Table</h4>
+                    <p>View all jobs in a comprehensive table with filtering and sorting capabilities</p>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">➕</span>
+                    <h4>Add New Job</h4>
+                    <p>Create new jobs with detailed information and assign to multiple employees</p>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">🔍</span>
+                    <h4>Query Jobs</h4>
+                    <p>Search for specific jobs by ID or select from the table to view details</p>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">✏️</span>
+                    <h4>Edit Jobs</h4>
+                    <p>Update job information, status, and assigned employees</p>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">📥</span>
+                    <h4>Export Jobs</h4>
+                    <p>Download job data to Excel for external analysis and reporting</p>
+                </div>
+                <div class="feature-card">
+                    <span class="icon">🏆</span>
+                    <h4>Performance & Badges</h4>
+                    <p>Track team performance and award badges for achievements</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Job Creation Process -->
+        <div class="slide">
+            <h1>📝 How to Create a New Job</h1>
+            <div class="step-list">
+                <ol>
+                    <li><strong>Click "Add New"</strong> from the main menu</li>
+                    <li><strong>Fill in Job Details:</strong>
+                        <ul>
+                            <li>Job ID (auto-generated)</li>
+                            <li>Job Name</li>
+                            <li>Description</li>
+                            <li>Entry Date (auto-filled with today's date)</li>
+                            <li>Planned Start Date</li>
+                            <li>Status (Active, Planned, Suggested, Completed, Cancelled)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Assign Employees:</strong>
+                        <ul>
+                            <li>Click "Add Employee" to assign team members</li>
+                            <li>Select from the dropdown list</li>
+                            <li>You can assign multiple employees to one job</li>
+                            <li>Each employee can only be assigned once per job</li>
+                        </ul>
+                    </li>
+                    <li><strong>Click "Add New"</strong> to save the job</li>
+                </ol>
+            </div>
+            <div class="success">
+                <strong>✅ Success:</strong> Once created, all assigned employees will receive a WhatsApp notification about the new job assignment!
+            </div>
+        </div>
+
+        <!-- Slide 5: Job Management -->
+        <div class="slide">
+            <h1>📊 Job Management & Tracking</h1>
+            <h2>Job Table Features:</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🔍 Advanced Filtering</h4>
+                    <ul>
+                        <li>Filter by Job ID, Name, Description</li>
+                        <li>Filter by date ranges (Entry, Planned Start, Actual Start, End)</li>
+                        <li>Filter by Status and Assigned Employees</li>
+                        <li>Real-time filtering as you type</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>📋 Job Information</h4>
+                    <ul>
+                        <li>Complete job details in one view</li>
+                        <li>Assigned employees clearly displayed</li>
+                        <li>Status tracking and date management</li>
+                        <li>Easy identification with job IDs</li>
+                    </ul>
+                </div>
+            </div>
+            <h2>Query Jobs:</h2>
+            <div class="step-list">
+                <ol>
+                    <li><strong>Method 1:</strong> Enter Job ID manually and click "Load"</li>
+                    <li><strong>Method 2:</strong> Select a job from the table and click "Query"</li>
+                    <li>View detailed job information including assigned employees</li>
+                    <li>Export the query results to Excel if needed</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 6: Employee Management -->
+        <div class="slide">
+            <h1>👥 Employee Management</h1>
+            <div class="warning">
+                <strong>⚠️ Admin/Editor Access Required:</strong> Only users with appropriate permissions can manage employees.
+            </div>
+            <h2>Employee Features:</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>➕ Add New Employee</h4>
+                    <ul>
+                        <li>Employee Name</li>
+                        <li>Employee ID</li>
+                        <li>WhatsApp Number (for notifications)</li>
+                        <li>Status (Active/Inactive)</li>
+                        <li>Test WhatsApp functionality</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>✏️ Edit Employee</h4>
+                    <ul>
+                        <li>Update employee information</li>
+                        <li>Change WhatsApp number</li>
+                        <li>Modify employee ID if needed</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>🔄 Status Management</h4>
+                    <ul>
+                        <li>Activate/Deactivate employees</li>
+                        <li>Inactive employees won't appear in job assignments</li>
+                        <li>Easy status toggle with one click</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="success">
+                <strong>📱 WhatsApp Integration:</strong> When you add an employee with a WhatsApp number, you can test the notification system to ensure they'll receive job updates.
+            </div>
+        </div>
+
+        <!-- Slide 7: Performance & Badges System -->
+        <div class="slide">
+            <h1>🏆 Performance Tracking & Badges</h1>
+            <h2>Available Badges:</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🚀 On-Time Completion</h4>
+                    <p>Meeting deadlines consistently</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Fast Delivery</h4>
+                    <p>Completing jobs ahead of schedule</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💡 Innovation</h4>
+                    <p>Bringing creative solutions to challenges</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔧 Problem Solver</h4>
+                    <p>Effectively resolving complex issues</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🤝 Team Player</h4>
+                    <p>Excellent collaboration and support</p>
+                </div>
+            </div>
+            <h2>How to Award Badges:</h2>
+            <div class="step-list">
+                <ol>
+                    <li>Go to "Performance & Badges" section</li>
+                    <li>Select a job from the dropdown</li>
+                    <li>Choose the appropriate badge</li>
+                    <li>Add any comments about the achievement</li>
+                    <li>Click "Award Badge" to save</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 8: WhatsApp Notifications -->
+        <div class="slide">
+            <h1>📱 WhatsApp Notifications</h1>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🎯 Job Assignment</h4>
+                    <p>Employees receive notifications when:</p>
+                    <ul>
+                        <li>A new job is assigned to them</li>
+                        <li>Job details are updated</li>
+                        <li>Status changes occur</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>🧪 Testing Notifications</h4>
+                    <p>When adding employees:</p>
+                    <ul>
+                        <li>Use "Test WhatsApp" button</li>
+                        <li>Verify the number is correct</li>
+                        <li>Ensure notifications will be received</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="warning">
+                <strong>📱 Important:</strong> WhatsApp notifications work with verified numbers. Make sure the employee's WhatsApp number is registered and active.
+            </div>
+            <div class="highlight">
+                <strong>💡 Pro Tip:</strong> Always test WhatsApp notifications when adding new employees to ensure they'll receive job updates.
+            </div>
+        </div>
+
+        <!-- Slide 9: Data Export & Reporting -->
+        <div class="slide">
+            <h1>📊 Data Export & Reporting</h1>
+            <h2>Export Features:</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>📥 Export All Jobs</h4>
+                    <p>Download complete job data to Excel for:</p>
+                    <ul>
+                        <li>External analysis</li>
+                        <li>Management reporting</li>
+                        <li>Data backup</li>
+                        <li>Integration with other systems</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>🔍 Export Query Results</h4>
+                    <p>Export specific job data when:</p>
+                    <ul>
+                        <li>Querying individual jobs</li>
+                        <li>Need specific job details</li>
+                        <li>Creating focused reports</li>
+                    </ul>
+                </div>
+            </div>
+            <h2>How to Export:</h2>
+            <div class="step-list">
+                <ol>
+                    <li><strong>Export All Jobs:</strong> Go to "Export Jobs" section and click "Export Jobs"</li>
+                    <li><strong>Export Query Results:</strong> Query a job and click "Export Jobs" button</li>
+                    <li>Excel file will download automatically</li>
+                    <li>File contains all job details including assigned employees</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Slide 10: Best Practices & Tips -->
+        <div class="slide">
+            <h1>💡 Best Practices & Tips</h1>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>✅ Do's</h4>
+                    <ul>
+                        <li>Always assign at least one employee to jobs</li>
+                        <li>Use descriptive job names and descriptions</li>
+                        <li>Set realistic planned start dates</li>
+                        <li>Update job status regularly</li>
+                        <li>Test WhatsApp notifications for new employees</li>
+                        <li>Use filters to find specific jobs quickly</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>❌ Don'ts</h4>
+                    <ul>
+                        <li>Don't leave job descriptions empty</li>
+                        <li>Don't assign the same employee twice to one job</li>
+                        <li>Don't forget to update job status</li>
+                        <li>Don't use invalid WhatsApp numbers</li>
+                        <li>Don't ignore permission restrictions</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="success">
+                <strong>🎯 Pro Tips:</strong>
+                <ul>
+                    <li>Use the job table filters to quickly find jobs by date, status, or employee</li>
+                    <li>Query jobs to see detailed information before making changes</li>
+                    <li>Export data regularly for backup and analysis purposes</li>
+                    <li>Keep employee information up-to-date for accurate notifications</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 11: Troubleshooting -->
+        <div class="slide">
+            <h1>🔧 Troubleshooting Common Issues</h1>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🚫 Permission Denied</h4>
+                    <p><strong>Problem:</strong> Can't access certain features</p>
+                    <p><strong>Solution:</strong> Contact your admin to check your role permissions</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 WhatsApp Not Working</h4>
+                    <p><strong>Problem:</strong> Notifications not received</p>
+                    <p><strong>Solution:</strong> Verify the phone number is correct and registered with WhatsApp</p>
+                </div>
+                <div class="feature-card">
+                    <h4>👥 Employee Not Showing</h4>
+                    <p><strong>Problem:</strong> Employee not in dropdown list</p>
+                    <p><strong>Solution:</strong> Check if employee status is "Active" in employee management</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💾 Export Not Working</h4>
+                    <p><strong>Problem:</strong> Can't download Excel file</p>
+                    <p><strong>Solution:</strong> Check your browser settings and try refreshing the page</p>
+                </div>
+            </div>
+            <div class="highlight">
+                <strong>🆘 Need Help?</strong> If you encounter any issues not covered here, contact your system administrator or IT support team.
+            </div>
+        </div>
+
+        <!-- Slide 12: Getting Started -->
+        <div class="slide">
+            <h1>🚀 Getting Started Checklist</h1>
+            <div class="step-list">
+                <h2>For All Users:</h2>
+                <ol>
+                    <li>✅ Log in with your provided credentials</li>
+                    <li>✅ Familiarize yourself with the main menu</li>
+                    <li>✅ Explore the Job Table to see existing jobs</li>
+                    <li>✅ Try querying a job to see detailed information</li>
+                    <li>✅ Check your role permissions</li>
+                </ol>
+                
+                <h2>For Job Creators (Admin/Editor):</h2>
+                <ol>
+                    <li>✅ Create a test job to practice the process</li>
+                    <li>✅ Assign employees to the test job</li>
+                    <li>✅ Try editing the job details</li>
+                    <li>✅ Test the export functionality</li>
+                </ol>
+                
+                <h2>For Employee Managers (Admin):</h2>
+                <ol>
+                    <li>✅ Add a test employee with WhatsApp number</li>
+                    <li>✅ Test WhatsApp notification</li>
+                    <li>✅ Practice editing employee information</li>
+                    <li>✅ Try changing employee status</li>
+                </ol>
+            </div>
+            <div class="success">
+                <strong>🎉 Congratulations!</strong> You're now ready to use the Trichy Gold Job Management App effectively. Remember to keep this presentation handy for reference!
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+    </div>
+    
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="currentSlide">1</span> / <span id="totalSlides">12</span>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        
+        document.getElementById('totalSlides').textContent = totalSlides;
+        
+        function showSlide(n) {
+            slides[currentSlideIndex].classList.remove('active');
+            currentSlideIndex = (n + totalSlides) % totalSlides;
+            slides[currentSlideIndex].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = currentSlideIndex + 1;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 0;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlides - 1;
+        }
+        
+        function changeSlide(direction) {
+            if (direction === 1 && currentSlideIndex < totalSlides - 1) {
+                showSlide(currentSlideIndex + 1);
+            } else if (direction === -1 && currentSlideIndex > 0) {
+                showSlide(currentSlideIndex - 1);
+            }
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            }
+        });
+        
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>

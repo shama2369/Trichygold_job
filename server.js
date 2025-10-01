@@ -9,11 +9,78 @@ const fs = require('fs');
 
 dotenv.config();
 
+// Import Twilio service after dotenv.config()
+const twilioService = require('./services/twilioService');
+
 const app = express();
 const port = process.env.PORT || 3000;
 const uri = process.env.MONGO_URI;
 
 let db;
+
+// Helper function to get employee phone number
+async function getEmployeePhoneNumber(employeeIdentifier, db) {
+  try {
+    // Try to find by name first (legacy support)
+    let employee = await db.collection('employees').findOne({ 
+      name: employeeIdentifier,
+      status: 'active'
+    });
+    
+    // If not found by name, try by employeeId
+    if (!employee) {
+      employee = await db.collection('employees').findOne({ 
+        employeeId: employeeIdentifier,
+        status: 'active'
+      });
+    }
+    
+    // If still not found, try by _id (MongoDB ObjectId)
+    if (!employee && employeeIdentifier.match(/^[0-9a-fA-F]{24}$/)) {
+      const { ObjectId } = require('mongodb');
+      employee = await db.collection('employees').findOne({ 
+        _id: new ObjectId(employeeIdentifier),
+        status: 'active'
+      });
+    }
+    
+    if (employee) {
+      console.log(`📱 Found employee: ${employee.name} (${employee.whatsapp})`);
+      return employee.whatsapp;
+    } else {
+      console.log(`❌ Employee not found: ${employeeIdentifier}`);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching employee phone:', error);
+    return null;
+  }
+}
+
+// Authentication middleware
+const verifyToken = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = Buffer.from(token, 'base64').toString();
+    const [userId] = decoded.split(':');
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Add user ID to request for use in route handlers
+    req.user = { userId: userId };
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -70,74 +137,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Helper function to sync tag counters with actual saved tags
-async function syncTagCounters() {
-  try {
-    const jobs = db.collection('jobcollection');
-    const tagCounters = db.collection('tagCounters');
-    
-    // Get all jobs and extract all tag numbers
-    const allJobs = await jobs.find({}).toArray();
-    const tagNumbersByPrefix = {};
-    
-    // Collect all tag numbers by prefix
-    allJobs.forEach(job => {
-      if (job.channels && Array.isArray(job.channels)) {
-        job.channels.forEach(channel => {
-          if (channel.tagNumber && channel.tagNumber.trim() !== '') {
-            const prefix = channel.tagNumber.substring(0, 2);
-            const numberPart = parseInt(channel.tagNumber.substring(2));
-            
-            if (!tagNumbersByPrefix[prefix]) {
-              tagNumbersByPrefix[prefix] = [];
-            }
-            tagNumbersByPrefix[prefix].push(numberPart);
-          }
-        });
-      }
-    });
-    
-    // Update counters based on actual saved tags
-    for (const [prefix, numbers] of Object.entries(tagNumbersByPrefix)) {
-      if (numbers.length > 0) {
-        const maxNumber = Math.max(...numbers);
-        
-        // Update or create counter
-        await tagCounters.updateOne(
-          { prefix: prefix },
-          { $set: { lastNumber: maxNumber } },
-          { upsert: true }
-        );
-        
-        console.log(`Synced counter for ${prefix} to ${maxNumber}`);
-      }
-    }
-    
-    // For prefixes with no saved tags, keep the existing counter (don't reset to 0)
-    // This preserves the highest number ever used, even if all tags are deleted
-    const existingCounters = await tagCounters.find({}).toArray();
-    for (const counter of existingCounters) {
-      if (!tagNumbersByPrefix[counter.prefix]) {
-        // Don't reset to 0 - keep the existing counter value
-        // This ensures gaps are preserved and numbers are never reused
-        console.log(`Keeping counter for ${counter.prefix} at ${counter.lastNumber} (no current saved tags, but preserving history)`);
-      }
-    }
-  } catch (err) {
-    console.error('Error syncing tag counters:', err);
-  }
-}
 
-// POST: Manually sync tag counters with actual saved tags
-app.post('/api/tags/sync', async (req, res) => {
-  try {
-    await syncTagCounters();
-    res.json({ message: 'Tag counters synced successfully' });
-  } catch (err) {
-    console.error('Error syncing tag counters:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 // GET: Debug endpoint to check job data structure
 app.get('/api/debug/jobs', async (req, res) => {
@@ -156,7 +156,6 @@ app.get('/api/debug/jobs', async (req, res) => {
       workStartDate: job.workStartDate,
       startDate: job.startDate,
       endDate: job.endDate,
-      budget: job.budget,
       status: job.status,
       jobAssignedTo: job.jobAssignedTo
     }));
@@ -169,14 +168,12 @@ app.get('/api/debug/jobs', async (req, res) => {
 });
 
 // POST: Create or update job
-app.post('/api/jobs', async (req, res) => {
+app.post('/api/jobs', verifyToken, async (req, res) => {
   try {
-    // Parse job data from form
-    let jobData;
-    try {
-      jobData = JSON.parse(req.body.jobData);
-    } catch (parseError) {
-      return res.status(400).json({ error: 'Invalid job data format' });
+    // Get job data from form (already parsed by bodyParser)
+    const jobData = req.body.jobData;
+    if (!jobData) {
+      return res.status(400).json({ error: 'No job data provided' });
     }
     
     console.log('=== JOB SUBMISSION DEBUG ===');
@@ -193,7 +190,7 @@ app.post('/api/jobs', async (req, res) => {
       { $set: jobData },
       { upsert: true }
     );
-    
+
     res.status(200).json({ message: 'Job saved successfully', campaignId: jobData.campaignId });
   } catch (err) {
     console.error('Error saving campaign:', err);
@@ -202,7 +199,7 @@ app.post('/api/jobs', async (req, res) => {
 });
 
 // PUT: Update campaign
-app.put('/api/campaigns/:campaignId', async (req, res) => {
+app.put('/api/campaigns/:campaignId', verifyToken, async (req, res) => {
   try {
     const campaignId = req.params.campaignId;
     const campaignData = req.body;
@@ -275,8 +272,40 @@ app.put('/api/campaigns/:campaignId', async (req, res) => {
       return res.status(404).json({ error: 'Campaign not found' });
     }
 
-    // Sync tag counters after update to ensure consistency
-    await syncTagCounters();
+    // Send WhatsApp notification if job details are updated and assigned to employees
+    const employeesToNotify = [];
+    
+    // Check for single employee assignment (legacy)
+    if (campaignData.jobAssignedTo) {
+      employeesToNotify.push(campaignData.jobAssignedTo);
+    }
+    
+    // Check for multiple employee assignments (new system)
+    if (campaignData.assignedEmployees && Array.isArray(campaignData.assignedEmployees)) {
+      campaignData.assignedEmployees.forEach(emp => {
+        if (emp.employeeName && !employeesToNotify.includes(emp.employeeName)) {
+          employeesToNotify.push(emp.employeeName);
+        }
+      });
+    }
+    
+    console.log('📱 Employees to notify for update:', employeesToNotify);
+    
+    // Send notifications to all assigned employees
+    for (const employeeName of employeesToNotify) {
+      try {
+        const employeePhone = await getEmployeePhoneNumber(employeeName, db);
+        if (employeePhone) {
+          await twilioService.sendJobUpdateNotification(campaignData, employeePhone, 'details');
+          console.log(`✅ WhatsApp update notification sent to ${employeeName} (${employeePhone})`);
+        } else {
+          console.log(`❌ No WhatsApp number found for employee: ${employeeName}`);
+        }
+      } catch (notificationError) {
+        console.error(`❌ Failed to send WhatsApp update notification to ${employeeName}:`, notificationError);
+        // Don't fail the job update if notification fails
+      }
+    }
     
     return res.status(200).json({ 
       message: 'Campaign updated successfully', 
@@ -289,7 +318,7 @@ app.put('/api/campaigns/:campaignId', async (req, res) => {
 });
 
 // GET: Retrieve all jobs
-app.get('/api/jobs', async (req, res) => {
+app.get('/api/jobs', verifyToken, async (req, res) => {
   console.log('Received GET request for all jobs (/api/jobs)');
   try {
     const jobs = db.collection('jobcollection');
@@ -302,7 +331,7 @@ app.get('/api/jobs', async (req, res) => {
 });
 
 // GET: Retrieve all campaigns (backward compatibility)
-app.get('/api/campaigns', async (req, res) => {
+app.get('/api/campaigns', verifyToken, async (req, res) => {
   console.log('Received GET request for all campaigns (/api/campaigns)');
   try {
     const jobs = db.collection('jobcollection');
@@ -315,14 +344,12 @@ app.get('/api/campaigns', async (req, res) => {
 });
 
 // POST: Create or update campaign (backward compatibility)
-app.post('/api/campaigns', async (req, res) => {
+app.post('/api/campaigns', verifyToken, async (req, res) => {
   try {
-    // Parse job data from form
-    let jobData;
-    try {
-      jobData = JSON.parse(req.body.campaignData || req.body.jobData);
-    } catch (parseError) {
-      return res.status(400).json({ error: 'Invalid job data format' });
+    // Get job data from form (already parsed by bodyParser)
+    const jobData = req.body.campaignData || req.body.jobData;
+    if (!jobData) {
+      return res.status(400).json({ error: 'No job data provided' });
     }
     
     console.log('=== JOB SUBMISSION DEBUG (via campaigns endpoint) ===');
@@ -340,6 +367,41 @@ app.post('/api/campaigns', async (req, res) => {
       { upsert: true }
     );
     
+    // Send WhatsApp notification if job is assigned to employees
+    const employeesToNotify = [];
+    
+    // Check for single employee assignment (legacy)
+    if (jobData.jobAssignedTo) {
+      employeesToNotify.push(jobData.jobAssignedTo);
+    }
+    
+    // Check for multiple employee assignments (new system)
+    if (jobData.assignedEmployees && Array.isArray(jobData.assignedEmployees)) {
+      jobData.assignedEmployees.forEach(emp => {
+        if (emp.employeeName && !employeesToNotify.includes(emp.employeeName)) {
+          employeesToNotify.push(emp.employeeName);
+        }
+      });
+    }
+    
+    console.log('📱 Employees to notify:', employeesToNotify);
+    
+    // Send notifications to all assigned employees
+    for (const employeeName of employeesToNotify) {
+      try {
+        const employeePhone = await getEmployeePhoneNumber(employeeName, db);
+        if (employeePhone) {
+          await twilioService.sendJobAssignmentNotification(jobData, employeePhone);
+          console.log(`✅ WhatsApp notification sent to ${employeeName} (${employeePhone})`);
+        } else {
+          console.log(`❌ No WhatsApp number found for employee: ${employeeName}`);
+        }
+      } catch (notificationError) {
+        console.error(`❌ Failed to send WhatsApp notification to ${employeeName}:`, notificationError);
+        // Don't fail the job creation if notification fails
+      }
+    }
+    
     res.status(200).json({ message: 'Job saved successfully', campaignId: jobData.campaignId });
   } catch (err) {
     console.error('Error saving job:', err);
@@ -349,7 +411,7 @@ app.post('/api/campaigns', async (req, res) => {
 
 // GET: Export all campaigns to Excel
 // GET: Find campaigns by tag number (for debugging)
-app.get('/api/campaigns/tag/:tagNumber', async (req, res) => {
+app.get('/api/campaigns/tag/:tagNumber', verifyToken, async (req, res) => {
   try {
     const tagNumber = req.params.tagNumber;
     const campaigns = db.collection('jobcollection');
@@ -380,7 +442,7 @@ app.get('/api/campaigns/tag/:tagNumber', async (req, res) => {
 });
 
 // GET: Export a single campaign to Excel
-app.get('/api/campaigns/:campaignId/export', async (req, res) => {
+app.get('/api/campaigns/:campaignId/export', verifyToken, async (req, res) => {
   const campaignId = req.params.campaignId;
   try {
     const campaigns = db.collection('jobcollection');
@@ -389,62 +451,33 @@ app.get('/api/campaigns/:campaignId/export', async (req, res) => {
       return res.status(404).json({ error: 'Campaign not found' });
     }
     const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Campaigns');
+    const worksheet = workbook.addWorksheet('Jobs');
     worksheet.columns = [
-      { header: 'Marketing ID', key: 'campaignId', width: 15 },
+      { header: 'Job ID', key: 'campaignId', width: 15 },
       { header: 'Name', key: 'name', width: 20 },
       { header: 'Description', key: 'description', width: 30 },
-      { header: 'Start Date', key: 'startDate', width: 15 },
+      { header: 'Entry Date', key: 'entryDate', width: 15 },
+      { header: 'Planned Start Date', key: 'plannedStartDate', width: 15 },
+      { header: 'Actual Start Date', key: 'actualStartDate', width: 15 },
       { header: 'End Date', key: 'endDate', width: 15 },
-      { header: 'Budget (AED)', key: 'budget', width: 10 },
       { header: 'Status', key: 'status', width: 10 },
       { header: 'Job Assigned To', key: 'jobAssignedTo', width: 15 },
-      { header: 'Channels', key: 'channels', width: 50 },
     ];
 
-    // Format channels as readable string (same as all-campaigns export)
-    let channelDetails = '';
-    if (campaign.channels && Array.isArray(campaign.channels)) {
-      channelDetails = campaign.channels.map(channel => {
-        let baseInfo = '';
-        if (channel.type === 'Social Media') {
-          baseInfo = `Social Media: ${channel.platform}, ${channel.adName}, ${channel.cost} AED, ${channel.adType}`;
-        } else if (channel.type === 'TV') {
-          baseInfo = `TV: ${channel.network || ''}, ${channel.adName}, ${channel.cost} AED`;
-        } else if (channel.type === 'Print Media') {
-          baseInfo = `Print Media: ${channel.publication}, ${channel.adName}, ${channel.cost} AED`;
-        } else if (channel.type === 'Radio') {
-          baseInfo = `Radio: ${channel.station || ''}, ${channel.adName}, ${channel.cost} AED`;
-        } else {
-          baseInfo = `${channel.type}: ${channel.adName}, ${channel.cost} AED`;
-        }
-        
-        // Add impressions if available
-        if (channel.impressions) {
-          baseInfo += `, ${channel.impressions.toLocaleString()} impressions`;
-        }
-        
-        // Add tag number if available
-        if (channel.tagNumber) {
-          baseInfo += `, Tag: ${channel.tagNumber}`;
-        }
-        
-        return baseInfo;
-      }).join('; ');
-    }
 
     worksheet.addRow({
       campaignId: campaign.campaignId,
       name: campaign.name,
       description: campaign.description,
-      startDate: campaign.startDate,
+      entryDate: campaign.entryDate,
+      plannedStartDate: campaign.plannedStartDate,
+      actualStartDate: campaign.actualStartDate,
       endDate: campaign.endDate,
-      budget: campaign.budget,
       status: campaign.status,
-      channels: channelDetails,
+      jobAssignedTo: campaign.jobAssignedTo,
     });
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=campaign_${campaignId}.xlsx`);
+    res.setHeader('Content-Disposition', `attachment; filename=job_${campaignId}.xlsx`);
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
@@ -453,7 +486,7 @@ app.get('/api/campaigns/:campaignId/export', async (req, res) => {
   }
 });
 
-app.get('/api/campaigns/export', async (req, res) => {
+app.get('/api/campaigns/export', verifyToken, async (req, res) => {
   console.log('Received GET request for Excel export (/api/campaigns/export)');
   try {
     const campaigns = db.collection('jobcollection');
@@ -465,18 +498,18 @@ app.get('/api/campaigns/export', async (req, res) => {
     }
 
     const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet('Campaigns');
+    const worksheet = workbook.addWorksheet('Jobs');
     
     worksheet.columns = [
-      { header: 'Marketing ID', key: 'campaignId', width: 15 },
+      { header: 'Job ID', key: 'campaignId', width: 15 },
       { header: 'Name', key: 'name', width: 20 },
       { header: 'Description', key: 'description', width: 30 },
-      { header: 'Start Date', key: 'startDate', width: 15 },
+      { header: 'Entry Date', key: 'entryDate', width: 15 },
+      { header: 'Planned Start Date', key: 'plannedStartDate', width: 15 },
+      { header: 'Actual Start Date', key: 'actualStartDate', width: 15 },
       { header: 'End Date', key: 'endDate', width: 15 },
-      { header: 'Budget (AED)', key: 'budget', width: 10 },
       { header: 'Status', key: 'status', width: 10 },
       { header: 'Job Assigned To', key: 'jobAssignedTo', width: 15 },
-      { header: 'Channels', key: 'channels', width: 50 },
     ];
     
     data.forEach(campaign => {
@@ -494,10 +527,6 @@ app.get('/api/campaigns/export', async (req, res) => {
           baseInfo = `${channel.type}: ${channel.adName}, ${channel.cost} AED`;
         }
         
-        // Add impressions if available
-        if (channel.impressions) {
-          baseInfo += `, ${channel.impressions.toLocaleString()} impressions`;
-        }
         
         // Add tag number if available
         if (channel.tagNumber) {
@@ -511,16 +540,17 @@ app.get('/api/campaigns/export', async (req, res) => {
         campaignId: campaign.campaignId,
         name: campaign.name,
         description: campaign.description,
-        startDate: campaign.startDate,
+        entryDate: campaign.entryDate,
+        plannedStartDate: campaign.plannedStartDate,
+        actualStartDate: campaign.actualStartDate,
         endDate: campaign.endDate,
-        budget: campaign.budget,
         status: campaign.status,
-        channels: channelDetails,
+        jobAssignedTo: campaign.jobAssignedTo,
       });
     });
     
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=campaigns.xlsx');
+    res.setHeader('Content-Disposition', 'attachment; filename=jobs.xlsx');
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
@@ -530,7 +560,7 @@ app.get('/api/campaigns/export', async (req, res) => {
 });
 
 // GET: Search campaigns by tag number
-app.get('/api/campaigns/tag/:tagNumber', async (req, res) => {
+app.get('/api/campaigns/tag/:tagNumber', verifyToken, async (req, res) => {
   const tagNumber = req.params.tagNumber;
   console.log(`Searching for campaigns with tag number: ${tagNumber}`);
   try {
@@ -557,7 +587,7 @@ app.get('/api/campaigns/tag/:tagNumber', async (req, res) => {
 });
 
 // GET: Query campaigns by campaignId
-app.get('/api/campaigns/:campaignId', async (req, res) => {
+app.get('/api/campaigns/:campaignId', verifyToken, async (req, res) => {
   console.log(`Received GET request for campaignId: ${req.params.campaignId}`);
   try {
     const campaignId = req.params.campaignId;
@@ -575,7 +605,7 @@ app.get('/api/campaigns/:campaignId', async (req, res) => {
 });
 
 // DELETE: Delete campaign by MongoDB _id
-app.delete('/api/campaigns/:campaignId', async (req, res) => {
+app.delete('/api/campaigns/:campaignId', verifyToken, async (req, res) => {
   console.log(`Received DELETE request for campaignId: ${req.params.campaignId}`);
   try {
     const campaignId = req.params.campaignId;
@@ -597,347 +627,152 @@ app.delete('/api/campaigns/:campaignId', async (req, res) => {
   }
 });
 
-// PUT: Update impressions for a specific tag number
-app.put('/api/campaigns/impressions/:tagNumber', async (req, res) => {
-  const tagNumber = req.params.tagNumber;
-  const { impressions } = req.body;
-  
-  console.log(`Updating impressions for tag ${tagNumber} to ${impressions}`);
-  
-  try {
-    const campaigns = db.collection('jobcollection');
-    
-    // Validate impressions is a number
-    if (typeof impressions !== 'number' || impressions < 0) {
-      return res.status(400).json({ error: 'Impressions must be a positive number' });
-    }
-    
-    // Find the campaign that contains this tag number and update the impressions
-    const result = await campaigns.updateOne(
-      { 'channels.tagNumber': tagNumber },
-      { $set: { 'channels.$.impressions': impressions } }
-    );
-    
-    console.log(`Update result: matched=${result.matchedCount}, modified=${result.modifiedCount}`);
-    
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'No campaign found with this tag number' });
-    }
-    
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({ error: 'Channel not found or no changes made' });
-    }
-    
-    res.json({ 
-      message: 'Impressions updated successfully',
-      tagNumber: tagNumber,
-      impressions: impressions
-    });
-  } catch (err) {
-    console.error('Error updating impressions:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
-// PUT: Update impressions for a specific platform in a campaign (fallback for channel index)
-app.put('/api/campaigns/:campaignId/channels/:channelIndex/impressions', async (req, res) => {
-  const campaignId = req.params.campaignId;
-  const channelIndex = parseInt(req.params.channelIndex);
-  const { impressions } = req.body;
-  
-  console.log(`Updating impressions for campaign ${campaignId}, channel ${channelIndex} to ${impressions}`);
-  
-  try {
-    const campaigns = db.collection('jobcollection');
-    
-    // Validate impressions is a number
-    if (typeof impressions !== 'number' || impressions < 0) {
-      return res.status(400).json({ error: 'Impressions must be a positive number' });
-    }
-    
-    // Update the specific channel's impressions
-    const result = await campaigns.updateOne(
-      { campaignId },
-      { $set: { [`channels.${channelIndex}.impressions`]: impressions } }
-    );
-    
-    console.log(`Update result: matched=${result.matchedCount}, modified=${result.modifiedCount}`);
-    
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Campaign not found' });
-    }
-    
-    if (result.modifiedCount === 0) {
-      return res.status(404).json({ error: 'Channel not found or no changes made' });
-    }
-    
-    res.json({ 
-      message: 'Impressions updated successfully',
-      impressions: impressions
-    });
-  } catch (err) {
-    console.error('Error updating impressions:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
-// GET: Get all unique tag numbers
-app.get('/api/tags', async (req, res) => {
+
+
+
+
+
+// Performance Rating API Endpoint
+app.put('/api/jobs/:jobId/rating', verifyToken, async (req, res) => {
   try {
-    const campaigns = db.collection('jobcollection');
-    const allCampaigns = await campaigns.find({}).toArray();
+    const jobId = req.params.jobId;
+    const { performanceRating } = req.body;
     
-    const tags = new Set();
-    allCampaigns.forEach(campaign => {
-      if (campaign.channels && Array.isArray(campaign.channels)) {
-        campaign.channels.forEach(channel => {
-          if (channel.tagNumber) {
-            tags.add(channel.tagNumber);
+    if (!performanceRating || !performanceRating.rating) {
+      return res.status(400).json({ error: 'Performance rating data is required' });
+    }
+    
+    const validRatings = ['excellent', 'good', 'average', 'bad'];
+    if (!validRatings.includes(performanceRating.rating)) {
+      return res.status(400).json({ error: 'Invalid rating. Must be excellent, good, average, or bad' });
+    }
+    
+    const jobs = db.collection('jobcollection');
+    const result = await jobs.updateOne(
+      { _id: new ObjectId(jobId) },
+      { 
+        $set: { 
+          performanceRating: {
+            ...performanceRating,
+            ratedAt: new Date().toISOString()
           }
-        });
+        }
       }
-    });
+    );
     
-    res.json({
-      tags: Array.from(tags).sort(),
-      count: tags.size
-    });
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    
+    res.status(200).json({ message: 'Performance rating updated successfully' });
   } catch (err) {
-    console.error('Error getting tags:', err);
+    console.error('Error updating performance rating:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// GET: Get tag counters (for admin purposes)
-app.get('/api/tags/counters', async (req, res) => {
+// Badge Awarding API Endpoint
+app.put('/api/jobs/:jobId/badge', verifyToken, async (req, res) => {
   try {
-    const tagCounters = db.collection('tagCounters');
-    const counters = await tagCounters.find({}).toArray();
+    const jobId = req.params.jobId;
+    const { appreciationBadges } = req.body;
     
-    // Function to get platform name from prefix
-    function getPlatformName(prefix) {
-      const platformMap = {
-        'IG': 'Instagram',
-        'FB': 'Facebook', 
-        'TT': 'TikTok',
-        'GG': 'Google',
-        'WA': 'Whatsup group',
-        'OS': 'Other Social',
-        'PM': 'Print Media',
-        'TV': 'TV',
-        'RD': 'Radio',
-        'EM': 'Email',
-        'MSG': 'Message',
-        'OE': 'Outdoor Events',
-        'PI': 'Promotional Items',
-        'PO': 'Promotional Offer',
-        'OT': 'Other'
-      };
-      return platformMap[prefix] || prefix;
+    if (!appreciationBadges || !Array.isArray(appreciationBadges) || appreciationBadges.length === 0) {
+      return res.status(400).json({ error: 'Badge data is required' });
     }
-
-    // Format counters for display
-    const formattedCounters = counters.map(counter => ({
-      prefix: counter.prefix,
-      platformName: getPlatformName(counter.prefix),
-      lastNumber: counter.lastNumber,
-      nextTag: `${counter.prefix}${String(counter.lastNumber + 1).padStart(4, '0')}`
+    
+    const validBadges = ['on_time_completion', 'fast_delivery', 'innovation', 'problem_solver', 'team_player'];
+    for (const badge of appreciationBadges) {
+      if (!validBadges.includes(badge.badgeType)) {
+        return res.status(400).json({ error: `Invalid badge type: ${badge.badgeType}` });
+      }
+    }
+    
+    const jobs = db.collection('jobcollection');
+    
+    // Add badges to existing badges array
+    const badgesToAdd = appreciationBadges.map(badge => ({
+      ...badge,
+      awardedAt: new Date().toISOString()
     }));
     
-    res.json({
-      counters: formattedCounters,
-      count: counters.length
-    });
-  } catch (err) {
-    console.error('Error getting tag counters:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// POST: Generate unique tag number (using last saved counter)
-app.post('/api/tags/generate', async (req, res) => {
-  const { channelType, platform } = req.body;
-  
-  console.log('Tag generation request:', { channelType, platform });
-  console.log('Platform type:', typeof platform);
-  console.log('Platform length:', platform ? platform.length : 'null');
-  console.log('Platform exact match with Whatsup group:', platform === 'Whatsup group');
-  
-  try {
-    // Determine prefix based on channel type and platform
-    let prefix = '';
-    if (channelType === 'Social Media') {
-      if (platform === 'Instagram') prefix = 'IG';
-      else if (platform === 'Facebook') prefix = 'FB';
-      else if (platform === 'TikTok') prefix = 'TT';
-      else if (platform === 'Google') prefix = 'GG';
-      else if (platform === 'Whatsup group' || platform?.trim() === 'Whatsup group' || platform?.includes('Whatsup')) prefix = 'WA';
-      else if (platform === 'Other') prefix = 'OS';
-      else {
-        // If no platform selected, return error
-        console.log('Unknown platform for Social Media:', platform);
-        return res.status(400).json({ error: 'Please select a platform for Social Media' });
+    const result = await jobs.updateOne(
+      { _id: new ObjectId(jobId) },
+      { 
+        $push: { 
+          appreciationBadges: { $each: badgesToAdd }
+        }
       }
-    } else if (channelType === 'Print Media') {
-      prefix = 'PM';
-    } else if (channelType === 'TV') {
-      prefix = 'TV';
-    } else if (channelType === 'Radio') {
-      prefix = 'RD';
-    } else if (channelType === 'Email') {
-      prefix = 'EM';
-    } else if (channelType === 'Message') {
-      prefix = 'MSG';
-    } else if (channelType === 'Outdoor Events') {
-      prefix = 'OE';
-    } else if (channelType === 'Promotional Items') {
-      prefix = 'PI';
-    } else if (channelType === 'Promotional Offer') {
-      prefix = 'PO';
-    } else if (channelType === 'Other') {
-      prefix = 'OT';
-    } else {
-      // If no channel type selected, return error
-      return res.status(400).json({ error: 'Please select a channel type' });
+    );
+    
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Job not found' });
     }
     
-    const tagCounters = db.collection('tagCounters');
-    
-    // Get current counter (represents last saved tag number)
-    let counter = await tagCounters.findOne({ prefix: prefix });
-    
-    if (!counter) {
-      // If counter doesn't exist, create it with lastNumber: 0
-      await tagCounters.insertOne({ prefix: prefix, lastNumber: 0 });
-      counter = { prefix: prefix, lastNumber: 0 };
-    }
-    
-    // Generate next tag number (last saved + 1)
-    const nextNumber = counter.lastNumber + 1;
-    const newTagNumber = `${prefix}${String(nextNumber).padStart(4, '0')}`;
-    
-    // Check if this tag number already exists in any campaign
-    const campaigns = db.collection('jobcollection');
-    const existingTag = await campaigns.findOne({
-      'channels.tagNumber': newTagNumber
-    });
-    
-    if (existingTag) {
-      // If tag exists, increment counter and try again
-      const incrementedNumber = nextNumber + 1;
-      const incrementedTagNumber = `${prefix}${String(incrementedNumber).padStart(4, '0')}`;
-      
-      console.log(`Tag ${newTagNumber} already exists, generating ${incrementedTagNumber} instead`);
-      
-      // Update counter to the incremented number
-      await tagCounters.updateOne(
-        { prefix: prefix },
-        { $set: { lastNumber: incrementedNumber } },
-        { upsert: true }
-      );
-      
-      res.json({
-        tagNumber: incrementedTagNumber,
-        prefix: prefix,
-        counter: incrementedNumber,
-        shouldIncrement: true
-      });
-    } else {
-      // Immediately increment the counter to prevent duplicate tags
-      await tagCounters.updateOne(
-        { prefix: prefix },
-        { $set: { lastNumber: nextNumber } },
-        { upsert: true }
-      );
-      
-      console.log(`Generated unique tag: ${newTagNumber} for ${channelType}${platform ? ' - ' + platform : ''}`);
-      
-      res.json({
-        tagNumber: newTagNumber,
-        prefix: prefix,
-        counter: nextNumber,
-        shouldIncrement: true
-      });
-    }
+    res.status(200).json({ message: 'Badge awarded successfully' });
   } catch (err) {
-    console.error('Error generating tag:', err);
+    console.error('Error awarding badge:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-
-
-// GET: Get impression statistics for all campaigns
-app.get('/api/impressions/stats', async (req, res) => {
+// Performance Analytics API Endpoint
+app.get('/api/performance/analytics', verifyToken, async (req, res) => {
   try {
-    console.log('Impression stats endpoint called'); // Debug log
-    const campaigns = db.collection('jobcollection');
-    const allCampaigns = await campaigns.find({}).toArray();
-    console.log('Found campaigns:', allCampaigns.length); // Debug log
+    const jobs = db.collection('jobcollection');
+    const allJobs = await jobs.find({}).toArray();
     
-    const stats = {
-      totalImpressions: 0,
-      impressionsByChannel: {},
-      impressionsByPlatform: {},
-      topPerformingChannels: [],
-      campaignsWithImpressions: 0
+    // Calculate performance metrics
+    const completedJobs = allJobs.filter(job => job.status === 'Completed');
+    const onTimeJobs = completedJobs.filter(job => {
+      if (!job.endDate || !job.plannedStartDate) return false;
+      const endDate = new Date(job.endDate);
+      const plannedEnd = new Date(job.plannedStartDate);
+      return endDate <= plannedEnd;
+    });
+    
+    const ratingCounts = {
+      excellent: 0,
+      good: 0,
+      average: 0,
+      bad: 0
     };
     
-    allCampaigns.forEach(campaign => {
-      let campaignHasImpressions = false;
-      console.log('Processing campaign:', campaign.campaignId, 'with channels:', campaign.channels?.length || 0); // Debug log
-      console.log('Campaign raw data:', JSON.stringify(campaign, null, 2)); // Full campaign data
+    const badgeCounts = {
+      on_time_completion: 0,
+      fast_delivery: 0,
+      innovation: 0,
+      problem_solver: 0,
+      team_player: 0
+    };
+    
+    completedJobs.forEach(job => {
+      if (job.performanceRating && job.performanceRating.rating) {
+        ratingCounts[job.performanceRating.rating]++;
+      }
       
-      if (campaign.channels && Array.isArray(campaign.channels)) {
-        campaign.channels.forEach(channel => {
-          const impressions = channel.impressions || 0;
-          console.log('Channel:', channel.type, 'Platform:', channel.platform, 'Impressions:', impressions); // Debug log
-          console.log('Channel raw data:', JSON.stringify(channel, null, 2)); // Full channel data
-          
-          if (impressions > 0) {
-            campaignHasImpressions = true;
-            stats.totalImpressions += impressions;
-            
-            // Track by channel type
-            if (!stats.impressionsByChannel[channel.type]) {
-              stats.impressionsByChannel[channel.type] = 0;
-            }
-            stats.impressionsByChannel[channel.type] += impressions;
-            
-            // Track by platform (for Social Media)
-            if (channel.type === 'Social Media' && channel.platform) {
-              if (!stats.impressionsByPlatform[channel.platform]) {
-                stats.impressionsByPlatform[channel.platform] = 0;
-              }
-              stats.impressionsByPlatform[channel.platform] += impressions;
-            }
-            
-            // Track top performing channels
-            stats.topPerformingChannels.push({
-              campaignId: campaign.campaignId,
-              campaignName: campaign.name,
-              channelType: channel.type,
-              platform: channel.platform || 'N/A',
-              adName: channel.adName,
-              impressions: impressions
+      if (job.appreciationBadges) {
+        job.appreciationBadges.forEach(badge => {
+          badgeCounts[badge.badgeType]++;
             });
           }
         });
-      }
-      
-      if (campaignHasImpressions) {
-        stats.campaignsWithImpressions++;
-      }
-    });
     
-    // Sort top performing channels by impressions
-    stats.topPerformingChannels.sort((a, b) => b.impressions - a.impressions);
-    stats.topPerformingChannels = stats.topPerformingChannels.slice(0, 10); // Top 10
+    const analytics = {
+      totalJobs: allJobs.length,
+      completedJobs: completedJobs.length,
+      onTimeJobs: onTimeJobs.length,
+      onTimeRate: completedJobs.length > 0 ? (onTimeJobs.length / completedJobs.length * 100).toFixed(1) : 0,
+      ratingCounts,
+      badgeCounts,
+      totalBadges: Object.values(badgeCounts).reduce((sum, count) => sum + count, 0)
+    };
     
-    console.log('Final stats being sent:', stats); // Debug log
-    res.json(stats);
+    res.status(200).json(analytics);
   } catch (err) {
-    console.error('Error getting impression stats:', err);
+    console.error('Error getting performance analytics:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -954,6 +789,144 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Server error' });
   } else {
     res.status(500).send('Server error');
+  }
+});
+
+// Employee Management API Endpoints
+app.get('/api/employees', verifyToken, async (req, res) => {
+  try {
+    const employees = req.app.locals.db.collection('employees');
+    const allEmployees = await employees.find({}).toArray();
+    res.status(200).json(allEmployees);
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.get('/api/employees/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const employees = req.app.locals.db.collection('employees');
+    const employee = await employees.findOne({ _id: new ObjectId(id) });
+    
+    if (!employee) {
+      return res.status(404).json({ error: 'Employee not found.' });
+    }
+    
+    res.status(200).json(employee);
+  } catch (error) {
+    console.error('Error fetching employee:', error);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.post('/api/employees', verifyToken, async (req, res) => {
+  try {
+    const { name, whatsapp, department, position, status } = req.body;
+    
+    if (!name || !whatsapp) {
+      return res.status(400).json({ error: 'Name and WhatsApp are required.' });
+    }
+    
+    const employees = req.app.locals.db.collection('employees');
+    const newEmployee = {
+      name,
+      whatsapp,
+      department: department || '',
+      position: position || '',
+      status: status || 'active',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    
+    const result = await employees.insertOne(newEmployee);
+    res.status(201).json({ message: 'Employee created successfully.', id: result.insertedId });
+  } catch (error) {
+    console.error('Error creating employee:', error);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.put('/api/employees/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, whatsapp, department, position, status } = req.body;
+    
+    const employees = req.app.locals.db.collection('employees');
+    const updateData = {
+      updated_at: new Date()
+    };
+    
+    if (name) updateData.name = name;
+    if (whatsapp) updateData.whatsapp = whatsapp;
+    if (department !== undefined) updateData.department = department;
+    if (position !== undefined) updateData.position = position;
+    if (status) updateData.status = status;
+    
+    const result = await employees.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateData }
+    );
+    
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Employee not found.' });
+    }
+    
+    res.status(200).json({ message: 'Employee updated successfully.' });
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.delete('/api/employees/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const employees = req.app.locals.db.collection('employees');
+    const result = await employees.deleteOne({ _id: new ObjectId(id) });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Employee not found.' });
+    }
+    
+    res.status(200).json({ message: 'Employee deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting employee:', error);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// Test WhatsApp notification endpoint
+app.post('/api/test-whatsapp', verifyToken, async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+    
+    // Ensure Twilio service is initialized
+    if (!twilioService.isInitialized) {
+      console.log('Twilio service not initialized, attempting to initialize...');
+      twilioService.initialize();
+    }
+    
+    if (!twilioService.isInitialized) {
+      return res.status(500).json({ 
+        error: 'Twilio service not available. Please check your credentials in .env file.' 
+      });
+    }
+    
+    const messageId = await twilioService.sendTestMessage(phoneNumber);
+    res.status(200).json({ 
+      message: 'Test message sent successfully', 
+      messageId 
+    });
+  } catch (error) {
+    console.error('Error sending test message:', error);
+    res.status(500).json({ error: 'Failed to send test message: ' + error.message });
   }
 });
 
@@ -988,6 +961,9 @@ async function setupDatabase() {
       const tagCounters = db.collection('tagCounters');
       await tagCounters.createIndex({ prefix: 1 }, { unique: true });
       console.log('Unique index on tagCounters created');
+      const counters = db.collection('counters');
+      // No need to create index on _id as it's automatically unique
+      console.log('Counters collection ready');
       return;
     } catch (err) {
       console.error(`MongoDB connection failed (Attempt ${4 - retries}):`, err.message);
@@ -1001,15 +977,15 @@ async function setupDatabase() {
   }
 }
 
-// Generate Marketing ID using a persistent counter (5-digit format: MAK_00001, MAK_00002, etc.)
+// Generate Job ID using a persistent counter (5-digit format: JOB_00001, JOB_00002, etc.)
 async function getNextCampaignId() {
   try {
     const counters = db.collection('counters');
-    console.log('Getting next marketing ID from persistent counter...');
+    console.log('Getting next job ID from persistent counter...');
     
     // Atomically increment the counter and get the new value
     const result = await counters.findOneAndUpdate(
-      { _id: 'campaignId' },
+      { _id: 'JobId' },
       { $inc: { lastNumber: 1 } },
       { upsert: true, returnDocument: 'after' }
     );
@@ -1027,13 +1003,13 @@ async function getNextCampaignId() {
     } else {
       // Fallback: get the current value
       console.log('Using fallback method...');
-      const currentDoc = await counters.findOne({ _id: 'campaignId' });
+      const currentDoc = await counters.findOne({ _id: 'JobId' });
       nextId = currentDoc ? currentDoc.lastNumber : 1;
       console.log('Fallback nextId:', nextId);
     }
     
-    const campaignId = `MAK_${nextId.toString().padStart(5, '0')}`;
-    console.log(`Generated marketing ID: ${campaignId} (5-digit format)`);
+    const campaignId = `JOB_${nextId.toString().padStart(5, '0')}`;
+    console.log(`Generated job ID: ${campaignId} (5-digit format)`);
     return campaignId;
   } catch (err) {
     console.error('Error generating persistent campaignId:', err);
@@ -1047,6 +1023,10 @@ async function startServer() {
     await setupDatabase();
     app.locals.db = db;
 
+    // Initialize Twilio service after database setup
+    console.log('Initializing Twilio service...');
+    twilioService.initialize();
+
     // Start server after DB connection
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
@@ -1058,5 +1038,24 @@ async function startServer() {
   }
 }
 
+
+// Delete Job API Endpoint
+app.delete('/api/jobs/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const jobsCollection = req.app.locals.db.collection('jobcollection');
+    const result = await jobsCollection.deleteOne({ _id: new ObjectId(id) });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Job not found.' });
+    }
+    
+    res.status(200).json({ message: 'Job deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
 
 startServer();

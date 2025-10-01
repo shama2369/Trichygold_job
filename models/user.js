@@ -2,11 +2,10 @@
 const { ObjectId } = require('mongodb');
 
 class User {
-  constructor({ _id, username, password, email, roles = [] }) {
+  constructor({ _id, username, password, roles = [] }) {
     this._id = _id ? new ObjectId(_id) : new ObjectId();
     this.username = username;
     this.password = password; // Should be hashed in production
-    this.email = email;
     this.roles = roles; // Array of role ObjectIds
     this.created_at = new Date();
     this.updated_at = new Date();
@@ -24,9 +23,6 @@ class User {
       errors.push('Password is required and must be a string');
     }
     
-    if (!userData.email || typeof userData.email !== 'string') {
-      errors.push('Email is required and must be a string');
-    }
     
     if (userData.roles && !Array.isArray(userData.roles)) {
       errors.push('Roles must be an array');

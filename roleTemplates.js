@@ -1,21 +1,20 @@
-// Role templates for campaign management system
+// Role templates for job management system
 // Use these as reference when creating viewer and editor roles
 
 // VIEWER ROLE TEMPLATE
 const viewerRole = {
   name: 'viewer',
-  description: 'View only - Can view campaigns and reports, no editing permissions',
+  description: 'View only - Can view jobs and reports, no editing permissions',
   permissions: {
-    create_campaigns: false,
-    edit_campaigns: false,
-    delete_campaigns: false,
-    view_campaigns: true,
+    create_jobs: false,
+    edit_jobs: false,
+    delete_jobs: false,
+    view_jobs: true,
     view_reports: true,
     export_data: false,
     manage_users: false,
     manage_roles: false,
-    generate_tags: false,
-    manage_channels: false
+    manage_employees: false
   },
   created_at: new Date(),
   updated_at: new Date()
@@ -24,18 +23,17 @@ const viewerRole = {
 // EDITOR ROLE TEMPLATE
 const editorRole = {
   name: 'editor',
-  description: 'Edit access - Can create and edit campaigns, view reports, and export data',
+  description: 'Edit access - Can create and edit jobs, view reports, and export data',
   permissions: {
-    create_campaigns: true,
-    edit_campaigns: true,
-    delete_campaigns: false,
-    view_campaigns: true,
+    create_jobs: true,
+    edit_jobs: true,
+    delete_jobs: false,
+    view_jobs: true,
     view_reports: true,
     export_data: true,
     manage_users: false,
     manage_roles: false,
-    generate_tags: true,
-    manage_channels: true
+    manage_employees: false
   },
   created_at: new Date(),
   updated_at: new Date()
@@ -44,18 +42,17 @@ const editorRole = {
 // ADMIN ROLE TEMPLATE (for reference)
 const adminRole = {
   name: 'admin',
-  description: 'Full access - Can create, edit, delete campaigns, manage users, view reports, and export data',
+  description: 'Full access - Can create, edit, delete jobs, manage users, view reports, and export data',
   permissions: {
-    create_campaigns: true,
-    edit_campaigns: true,
-    delete_campaigns: true,
-    view_campaigns: true,
+    create_jobs: true,
+    edit_jobs: true,
+    delete_jobs: true,
+    view_jobs: true,
     view_reports: true,
     export_data: true,
     manage_users: true,
     manage_roles: true,
-    generate_tags: true,
-    manage_channels: true
+    manage_employees: true
   },
   created_at: new Date(),
   updated_at: new Date()
@@ -67,18 +64,17 @@ const adminRole = {
 // To create viewer role:
 db.roles.insertOne({
   name: 'viewer',
-  description: 'View only - Can view campaigns and reports, no editing permissions',
+  description: 'View only - Can view jobs and reports, no editing permissions',
   permissions: {
-    create_campaigns: false,
-    edit_campaigns: false,
-    delete_campaigns: false,
-    view_campaigns: true,
+    create_jobs: false,
+    edit_jobs: false,
+    delete_jobs: false,
+    view_jobs: true,
     view_reports: true,
     export_data: false,
     manage_users: false,
     manage_roles: false,
-    generate_tags: false,
-    manage_channels: false
+    manage_employees: false
   },
   created_at: new Date(),
   updated_at: new Date()
@@ -87,18 +83,17 @@ db.roles.insertOne({
 // To create editor role:
 db.roles.insertOne({
   name: 'editor',
-  description: 'Edit access - Can create and edit campaigns, view reports, and export data',
+  description: 'Edit access - Can create and edit jobs, view reports, and export data',
   permissions: {
-    create_campaigns: true,
-    edit_campaigns: true,
-    delete_campaigns: false,
-    view_campaigns: true,
+    create_jobs: true,
+    edit_jobs: true,
+    delete_jobs: false,
+    view_jobs: true,
     view_reports: true,
     export_data: true,
     manage_users: false,
     manage_roles: false,
-    generate_tags: true,
-    manage_channels: true
+    manage_employees: false
   },
   created_at: new Date(),
   updated_at: new Date()

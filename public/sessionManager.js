@@ -94,10 +94,12 @@ class SessionManager {
   // Fetch user permissions from roles
   async fetchUserPermissions(roleIds) {
     try {
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/users/permissions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ roleIds })
       });
@@ -116,16 +118,14 @@ class SessionManager {
   // Get default permissions (viewer level)
   getDefaultPermissions() {
     return {
-      create_campaigns: false,
-      edit_campaigns: false,
-      delete_campaigns: false,
-      view_campaigns: true,
+      create_jobs: false,
+      edit_jobs: false,
+      delete_jobs: false,
+      view_jobs: true,
       view_reports: true,
       export_data: false,
       manage_users: false,
-      manage_roles: false,
-      generate_tags: false,
-      manage_channels: false
+      manage_roles: false
     };
   }
 
@@ -138,20 +138,20 @@ class SessionManager {
   }
 
   // Permission checking methods
-  canCreateCampaigns() {
-    return this.hasPermission('create_campaigns');
+  canCreateJobs() {
+    return this.hasPermission('create_jobs');
   }
 
-  canEditCampaigns() {
-    return this.hasPermission('edit_campaigns');
+  canEditJobs() {
+    return this.hasPermission('edit_jobs');
   }
 
-  canDeleteCampaigns() {
-    return this.hasPermission('delete_campaigns');
+  canDeleteJobs() {
+    return this.hasPermission('delete_jobs');
   }
 
-  canViewCampaigns() {
-    return this.hasPermission('view_campaigns');
+  canViewJobs() {
+    return this.hasPermission('view_jobs');
   }
 
   canViewReports() {
@@ -170,13 +170,25 @@ class SessionManager {
     return this.hasPermission('manage_roles');
   }
 
-  canGenerateTags() {
-    return this.hasPermission('generate_tags');
+  canManageEmployees() {
+    return this.hasPermission('manage_employees');
   }
 
-  canManageChannels() {
-    return this.hasPermission('manage_channels');
+  // Show permission denied popup
+  showPermissionDenied(feature) {
+    const messages = {
+      'delete': 'You need admin permissions to delete jobs.',
+      'user_manager': 'You need admin permissions to manage users.',
+      'create': 'You need editor or admin permissions to create jobs.',
+      'edit': 'You need editor or admin permissions to edit jobs.',
+      'manage_roles': 'You need admin permissions to manage roles.',
+      'manage_employees': 'You need admin permissions to manage employees.'
+    };
+    
+    const message = messages[feature] || 'You do not have permission to access this feature.';
+    alert(`❌ Permission Denied\n\n${message}`);
   }
+
 
   // Update UI based on permissions
   updateUI() {
@@ -184,6 +196,7 @@ class SessionManager {
     this.updateCampaignActions();
     this.updateUserManagement();
     this.updateRoleManagement();
+    this.updateEmployeeManagement();
   }
 
   // Update navigation visibility
@@ -191,7 +204,7 @@ class SessionManager {
     // Campaign management
     const campaignNav = document.getElementById('campaigns-nav');
     if (campaignNav) {
-      campaignNav.style.display = this.canViewCampaigns() ? 'block' : 'none';
+      campaignNav.style.display = this.canViewJobs() ? 'block' : 'none';
     }
 
     // User management
@@ -212,19 +225,19 @@ class SessionManager {
     // Create campaign button
     const createCampaignBtn = document.getElementById('create-campaign-btn');
     if (createCampaignBtn) {
-      createCampaignBtn.style.display = this.canCreateCampaigns() ? 'inline-block' : 'none';
+      createCampaignBtn.style.display = this.canCreateJobs() ? 'inline-block' : 'none';
     }
 
     // Edit campaign buttons
     const editButtons = document.querySelectorAll('.edit-campaign-btn');
     editButtons.forEach(btn => {
-      btn.style.display = this.canEditCampaigns() ? 'inline-block' : 'none';
+      btn.style.display = this.canEditJobs() ? 'inline-block' : 'none';
     });
 
     // Delete campaign buttons (menu button and table buttons)
     const deleteButtons = document.querySelectorAll('.delete-campaign-btn');
     deleteButtons.forEach(btn => {
-      btn.style.display = this.canDeleteCampaigns() ? 'inline-block' : 'none';
+      btn.style.display = this.canDeleteJobs() ? 'inline-block' : 'none';
     });
 
     // Generate tags buttons - removed since tags are now auto-generated
@@ -271,6 +284,25 @@ class SessionManager {
     const deleteRoleButtons = document.querySelectorAll('.delete-role-btn');
     deleteRoleButtons.forEach(btn => {
       btn.style.display = this.canManageRoles() ? 'inline-block' : 'none';
+    });
+  }
+
+  // Update employee management visibility
+  updateEmployeeManagement() {
+    // Employee management buttons
+    const addEmployeeBtn = document.getElementById('addEmployeeBtn');
+    if (addEmployeeBtn) {
+      addEmployeeBtn.style.display = this.canManageEmployees() ? 'inline-block' : 'none';
+    }
+
+    const editEmployeeButtons = document.querySelectorAll('.edit-employee-btn');
+    editEmployeeButtons.forEach(btn => {
+      btn.style.display = this.canManageEmployees() ? 'inline-block' : 'none';
+    });
+
+    const deleteEmployeeButtons = document.querySelectorAll('.delete-employee-btn');
+    deleteEmployeeButtons.forEach(btn => {
+      btn.style.display = this.canManageEmployees() ? 'inline-block' : 'none';
     });
   }
 
