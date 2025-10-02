@@ -1518,6 +1518,8 @@
     
     // Function to validate employee selections in real-time
     function validateEmployeeSelections() {
+      console.log('🔍 [DEBUG] validateEmployeeSelections called');
+      
       // Get employee entries from the currently visible form only
       let employeeEntries = [];
       
@@ -1525,14 +1527,14 @@
       const newCampaignForm = document.getElementById('new-campaign');
       if (newCampaignForm && !newCampaignForm.classList.contains('hidden')) {
         employeeEntries = document.querySelectorAll('#new-campaign .employee-entry');
-        console.log('🔍 Validating new campaign form, found entries:', employeeEntries.length);
+        console.log('🔍 Validating NEW job form, found entries:', employeeEntries.length);
       }
       
       // Check if we're in the edit form
       const editForm = document.getElementById('editCampaignForm');
       if (editForm && !editForm.classList.contains('hidden')) {
         employeeEntries = document.querySelectorAll('#editAssignedEmployeesContainer .employee-entry');
-        console.log('🔍 Validating edit form, found entries:', employeeEntries.length);
+        console.log('🔍 Validating EDIT job form, found entries:', employeeEntries.length);
       }
       
       const selectedEmployees = [];
@@ -1540,7 +1542,7 @@
       
       employeeEntries.forEach((entry, index) => {
         const employeeSelect = entry.querySelector('.employee-select');
-        if (employeeSelect && employeeSelect.value) {
+        if (employeeSelect && employeeSelect.value && employeeSelect.value !== '') {
           console.log(`🔍 Checking employee ${index + 1}: ${employeeSelect.value}`);
           if (selectedEmployees.includes(employeeSelect.value)) {
             duplicateEmployees.push(employeeSelect.value);
@@ -1558,14 +1560,17 @@
         }
       });
       
-      console.log('🔍 Final selected employees:', selectedEmployees);
-      console.log('🔍 Duplicate employees:', duplicateEmployees);
+      console.log('🔍 Final selected employees in THIS job:', selectedEmployees);
+      console.log('🔍 Duplicate employees in THIS job:', duplicateEmployees);
+      console.log('🔍 Validation result:', duplicateEmployees.length === 0);
       
       // If there are duplicates, show a warning
       if (duplicateEmployees.length > 0) {
-        console.warn('⚠️ Duplicate employee selections detected:', duplicateEmployees);
+        console.warn('⚠️ Duplicate employee selections detected in THIS job:', duplicateEmployees);
         // You could show a subtle warning here if needed
       }
+      
+      return duplicateEmployees.length === 0; // Return true if no duplicates
     }
 
     async function loadEmployeesIntoSelect(selectElement) {
@@ -1828,21 +1833,8 @@
         }
 
         // Validate that no employee is selected more than once (only within this form)
-        const selectedEmployees = [];
-        const duplicateEmployees = [];
-        editEmployeeEntries.forEach((entry, index) => {
-          const employeeSelect = entry.querySelector('.employee-select');
-          if (employeeSelect.value) {
-            if (selectedEmployees.includes(employeeSelect.value)) {
-              duplicateEmployees.push(employeeSelect.value);
-            } else {
-              selectedEmployees.push(employeeSelect.value);
-            }
-          }
-        });
-
-        if (duplicateEmployees.length > 0) {
-          alert(`⚠️ Warning: The following employees are selected more than once in this job: ${duplicateEmployees.join(', ')}\n\nPlease select each employee only once.`);
+        if (!validateEmployeeSelections()) {
+          alert(`⚠️ Warning: Some employees are selected more than once in this job.\n\nPlease select each employee only once.`);
           return;
         }
 
@@ -2234,58 +2226,6 @@
       fileInput.files = dt.files;
       handleFileUpload();
     }
-    
-    // Function to validate employee selections in real-time
-    function validateEmployeeSelections() {
-      // Get employee entries from the currently visible form only
-      let employeeEntries = [];
-      
-      // Check if we're in the new campaign form
-      const newCampaignForm = document.getElementById('new-campaign');
-      if (newCampaignForm && !newCampaignForm.classList.contains('hidden')) {
-        employeeEntries = document.querySelectorAll('#new-campaign .employee-entry');
-        console.log('🔍 Validating new campaign form, found entries:', employeeEntries.length);
-      }
-      
-      // Check if we're in the edit form
-      const editForm = document.getElementById('editCampaignForm');
-      if (editForm && !editForm.classList.contains('hidden')) {
-        employeeEntries = document.querySelectorAll('#editAssignedEmployeesContainer .employee-entry');
-        console.log('🔍 Validating edit form, found entries:', employeeEntries.length);
-      }
-      
-      const selectedEmployees = [];
-      const duplicateEmployees = [];
-      
-      employeeEntries.forEach((entry, index) => {
-        const employeeSelect = entry.querySelector('.employee-select');
-        if (employeeSelect && employeeSelect.value) {
-          console.log(`🔍 Checking employee ${index + 1}: ${employeeSelect.value}`);
-          if (selectedEmployees.includes(employeeSelect.value)) {
-            duplicateEmployees.push(employeeSelect.value);
-            console.log(`❌ Duplicate found: ${employeeSelect.value}`);
-            // Highlight the duplicate selection
-            employeeSelect.style.borderColor = '#EF4444';
-            employeeSelect.style.backgroundColor = '#FEF2F2';
-          } else {
-            selectedEmployees.push(employeeSelect.value);
-            console.log(`✅ Valid selection: ${employeeSelect.value}`);
-            // Reset styling for valid selection
-            employeeSelect.style.borderColor = '';
-            employeeSelect.style.backgroundColor = '';
-          }
-        }
-      });
-      
-      console.log('🔍 Final selected employees:', selectedEmployees);
-      console.log('🔍 Duplicate employees:', duplicateEmployees);
-      
-      // If there are duplicates, show a warning
-      if (duplicateEmployees.length > 0) {
-        console.warn('⚠️ Duplicate employee selections detected:', duplicateEmployees);
-        // You could show a subtle warning here if needed
-      }
-    }
 
     // Add employee entry specifically for edit form
     function addEmployeeEntryForEditForm() {
@@ -2410,6 +2350,16 @@
       });
 
       // Collect assigned employees
+      // Validate that no employee is selected more than once (only within this form)
+      console.log('🔍 [DEBUG] About to validate employee selections...');
+      if (!validateEmployeeSelections()) {
+        console.log('❌ [DEBUG] Validation failed - duplicates detected');
+        alert(`⚠️ Warning: Some employees are selected more than once in this job.\n\nPlease select each employee only once.`);
+        return;
+      }
+      console.log('✅ [DEBUG] Validation passed - no duplicates');
+
+      // Collect assigned employees AFTER validation
       const assignedEmployees = [];
       const employeeEntries = document.querySelectorAll('.employee-entry');
       employeeEntries.forEach(entry => {
@@ -2436,25 +2386,6 @@
         alert(`⚠️ Warning: Please select an employee for all employee entries.\n\nUnselected entries: ${unselectedEmployees.join(', ')}`);
             return;
           }
-
-      // Validate that no employee is selected more than once (only within this form)
-      const selectedEmployees = [];
-      const duplicateEmployees = [];
-      employeeEntries.forEach((entry, index) => {
-        const employeeSelect = entry.querySelector('.employee-select');
-        if (employeeSelect.value) {
-          if (selectedEmployees.includes(employeeSelect.value)) {
-            duplicateEmployees.push(employeeSelect.value);
-          } else {
-            selectedEmployees.push(employeeSelect.value);
-          }
-        }
-      });
-
-      if (duplicateEmployees.length > 0) {
-        alert(`⚠️ Warning: The following employees are selected more than once in this job:\n\n${duplicateEmployees.join(', ')}\n\nPlease remove duplicate assignments.`);
-        return;
-      }
 
       // Collect progress details
       const progressDetails = [];
@@ -3709,21 +3640,8 @@
         }
 
         // Validate that no employee is selected more than once (only within this form)
-        const selectedEmployees = [];
-        const duplicateEmployees = [];
-        editEmployeeEntries.forEach((entry, index) => {
-          const employeeSelect = entry.querySelector('.employee-select');
-          if (employeeSelect.value) {
-            if (selectedEmployees.includes(employeeSelect.value)) {
-              duplicateEmployees.push(employeeSelect.value);
-            } else {
-              selectedEmployees.push(employeeSelect.value);
-            }
-          }
-        });
-
-        if (duplicateEmployees.length > 0) {
-          alert(`⚠️ Warning: The following employees are selected more than once in this job:\n\n${duplicateEmployees.join(', ')}\n\nPlease remove duplicate assignments.`);
+        if (!validateEmployeeSelections()) {
+          alert(`⚠️ Warning: Some employees are selected more than once in this job.\n\nPlease select each employee only once.`);
           return;
         }
 
