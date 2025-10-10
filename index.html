@@ -412,7 +412,7 @@
                 <select id="filter-priority" class="form-control form-control-sm">
                   <option value="">All Priority</option>
                   <option value="High">High Priority</option>
-                  <option value="No Priority">Without Priority</option>
+                  <option value="Normal">Normal</option>
                 </select>
               </th>
               <th>
@@ -453,7 +453,7 @@
             <div>
               <label for="priority" class="block text-sm font-medium text-purple-700">Priority</label>
               <select id="priority" class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option value="" selected>No Priority</option>
+                <option value="Normal" selected>Normal</option>
                 <option value="High">High Priority</option>
               </select>
             </div>
@@ -1442,7 +1442,35 @@
 
     // Function to add progress detail entry
     function addProgressDetail() {
-      const container = document.getElementById('progressDetailsContainer');
+      // PRIORITY 1: Check if we're in edit mode first (to avoid ID conflicts)
+      const editForm = document.getElementById('editCampaignForm');
+      let container = null;
+      
+      if (editForm && !editForm.classList.contains('hidden')) {
+        // We're in edit mode, look for editProgressDetailsContainer
+        container = document.getElementById('editProgressDetailsContainer');
+        console.log('🔍 Edit mode detected, looking for editProgressDetailsContainer:', container ? 'Found' : 'Not found');
+        
+        // Fallback: search within edit form DOM
+        if (!container) {
+          container = editForm.querySelector('#progressDetailsContainer, #editProgressDetailsContainer');
+          console.log('🔍 Fallback search in edit form:', container ? 'Found' : 'Not found');
+        }
+      }
+      
+      // PRIORITY 2: If not in edit mode or container not found, use main form
+      if (!container) {
+        container = document.getElementById('progressDetailsContainer');
+        console.log('🔍 Looking in main form for progressDetailsContainer:', container ? 'Found' : 'Not found');
+      }
+      
+      if (!container) {
+        console.error('❌ Progress details container not found in either form');
+        alert('Error: Progress details container not found');
+        return;
+      }
+      
+      console.log('✅ Found progress container:', container.id);
       const detailId = 'progress_' + Date.now();
       
       const detailHTML = `
@@ -1466,6 +1494,7 @@
       `;
       
       container.insertAdjacentHTML('beforeend', detailHTML);
+      console.log('✅ Progress detail added successfully');
     }
     
     // Function to remove progress detail entry
@@ -1544,7 +1573,14 @@
         const employeeSelect = entry.querySelector('.employee-select');
         if (employeeSelect && employeeSelect.value && employeeSelect.value !== '') {
           console.log(`🔍 Checking employee ${index + 1}: ${employeeSelect.value}`);
-          if (selectedEmployees.includes(employeeSelect.value)) {
+          
+          // Skip duplicate checking for "All Employees" option
+          if (employeeSelect.value === 'ALL_EMPLOYEES') {
+            console.log(`✅ All Employees selected - skipping duplicate check`);
+            selectedEmployees.push(employeeSelect.value);
+            employeeSelect.style.borderColor = '';
+            employeeSelect.style.backgroundColor = '';
+          } else if (selectedEmployees.includes(employeeSelect.value)) {
             duplicateEmployees.push(employeeSelect.value);
             console.log(`❌ Duplicate found: ${employeeSelect.value}`);
             // Highlight the duplicate selection
@@ -1594,6 +1630,14 @@
         const employees = await response.json();
         console.log('Employees loaded:', employees.length);
         
+        // Add "All Employees" option
+        const allOption = document.createElement('option');
+        allOption.value = 'ALL_EMPLOYEES';
+        allOption.textContent = '👥 All Employees';
+        allOption.style.fontWeight = 'bold';
+        allOption.style.backgroundColor = '#F3F4F6';
+        selectElement.appendChild(allOption);
+        
         employees.forEach(employee => {
           if (employee.status === 'active') {
             const option = document.createElement('option');
@@ -1603,7 +1647,7 @@
           }
         });
         
-        console.log('✅ Employee dropdown populated successfully');
+        console.log('✅ Employee dropdown populated successfully (including All Employees option)');
       } catch (error) {
         console.error('❌ Error loading employees:', error);
         // Show error in dropdown
@@ -1808,15 +1852,50 @@
         // Collect assigned employees from edit form
         const assignedEmployees = [];
         const editEmployeeEntries = editForm.querySelectorAll('#editAssignedEmployeesContainer .employee-entry');
+        
+        // Check if "All Employees" was selected
+        let hasAllEmployees = false;
         editEmployeeEntries.forEach(entry => {
           const employeeSelect = entry.querySelector('.employee-select');
-          if (employeeSelect.value) {
-            assignedEmployees.push({
-              employeeId: employeeSelect.value,
-              employeeName: employeeSelect.value
-            });
+          if (employeeSelect.value === 'ALL_EMPLOYEES') {
+            hasAllEmployees = true;
           }
         });
+        
+        if (hasAllEmployees) {
+          // Fetch all active employees
+          console.log('🔍 [DEBUG] "All Employees" selected in edit - fetching all active employees');
+          try {
+            const response = await fetch('/api/employees', {
+              headers: getAuthHeaders()
+            });
+            const allEmployees = await response.json();
+            allEmployees.forEach(employee => {
+              if (employee.status === 'active') {
+                assignedEmployees.push({
+                  employeeId: employee.name,
+                  employeeName: employee.name
+                });
+              }
+            });
+            console.log('✅ [DEBUG] Added all active employees to edit:', assignedEmployees.length);
+          } catch (error) {
+            console.error('❌ Error fetching employees for ALL_EMPLOYEES in edit:', error);
+            alert('Error: Could not fetch employees list.');
+            return;
+          }
+        } else {
+          // Collect individual employees
+          editEmployeeEntries.forEach(entry => {
+            const employeeSelect = entry.querySelector('.employee-select');
+            if (employeeSelect.value) {
+              assignedEmployees.push({
+                employeeId: employeeSelect.value,
+                employeeName: employeeSelect.value
+              });
+            }
+          });
+        }
 
         // Validate that all employee entries have selected employees
         const unselectedEmployees = [];
@@ -1841,17 +1920,29 @@
         // Add assigned employees to form data
         formData.assignedEmployees = assignedEmployees;
 
-        // Collect progress details
+        // Collect progress details from edit form (check both IDs)
         const progressDetails = [];
-        const progressEntries = editForm.querySelectorAll('#progressDetailsContainer > div');
-        progressEntries.forEach(entry => {
-          const date = entry.querySelector('.progress-date')?.value;
-          const description = entry.querySelector('.progress-description')?.value;
-          if (date && description) {
-            progressDetails.push({ date, description });
-          }
-        });
+        let progressContainer = editForm.querySelector('#editProgressDetailsContainer');
+        if (!progressContainer) {
+          progressContainer = editForm.querySelector('#progressDetailsContainer');
+        }
+        
+        if (progressContainer) {
+          const progressEntries = progressContainer.querySelectorAll('.bg-white');
+          console.log('🔍 [DEBUG] Collecting progress details from:', progressContainer.id, 'found:', progressEntries.length);
+          progressEntries.forEach(entry => {
+            const date = entry.querySelector('.progress-date')?.value;
+            const description = entry.querySelector('.progress-description')?.value;
+            console.log('🔍 [DEBUG] Progress entry - Date:', date, 'Description:', description);
+            if (date && description) {
+              progressDetails.push({ date, description });
+            }
+          });
+        } else {
+          console.warn('⚠️ Progress container not found in edit form');
+        }
         formData.progressDetails = progressDetails;
+        console.log('🔍 [DEBUG] Total progress details collected:', progressDetails.length);
 
         // Collect file attachments
         const fileInput = editForm.querySelector('#fileUpload');
@@ -1859,7 +1950,7 @@
         formData.files = files;
 
         // Add priority
-        formData.priority = editForm.querySelector('#priority')?.value || 'No Priority';
+        formData.priority = editForm.querySelector('#priority')?.value || 'Normal';
 
         console.log('Form data for update:', formData);
 
@@ -1876,6 +1967,7 @@
 
         const result = await response.json();
         console.log('Update result:', result);
+        console.log('[DEBUG] Job update successful, preparing to refresh table...');
 
         alert('Job updated successfully!');
         
@@ -1888,8 +1980,11 @@
         // Show the campaigns table
         showSection('campaigns-table');
         
-        // Refresh the campaigns table
-        loadCampaignsTable();
+        // Refresh the campaigns table with a small delay to ensure database consistency
+        setTimeout(() => {
+          console.log('[DEBUG] Refreshing campaigns table after update...');
+          loadCampaignsTable();
+        }, 500);
         
       } catch (error) {
         console.error('Error updating campaign:', error);
@@ -1946,11 +2041,17 @@
       // Fill in the form with campaign data
       fillFormWithCampaignData(editForm, campaign);
 
-      // Fix ID conflict by giving edit form container a unique ID
+      // Fix ID conflict by giving edit form containers unique IDs
       const assignedEmployeesContainer = editForm.querySelector('#assignedEmployeesContainer');
       if (assignedEmployeesContainer) {
         assignedEmployeesContainer.id = 'editAssignedEmployeesContainer';
-        console.log('✅ Changed edit form container ID to editAssignedEmployeesContainer');
+        console.log('✅ Changed edit form employees container ID to editAssignedEmployeesContainer');
+      }
+
+      const progressDetailsContainer = editForm.querySelector('#progressDetailsContainer');
+      if (progressDetailsContainer) {
+        progressDetailsContainer.id = 'editProgressDetailsContainer';
+        console.log('✅ Changed edit form progress container ID to editProgressDetailsContainer');
       }
 
       // Load assigned employees into the edit form
@@ -1969,11 +2070,59 @@
         console.log('❌ Add Employee button not found in edit form');
       }
 
+      // Attach Add Details button functionality to edit form
+      const addDetailsBtn = editForm.querySelector('button[onclick="addProgressDetail()"]');
+      console.log('🔍 Looking for Add Details button in edit form:', addDetailsBtn);
+      if (addDetailsBtn) {
+        console.log('✅ Found Add Details button, attaching click handler');
+        addDetailsBtn.onclick = function() {
+          console.log('Add Details button clicked in edit form');
+          addProgressDetail();
+        };
+      } else {
+        console.log('❌ Add Details button not found in edit form');
+      }
+
       // Modify the submit button to handle updates
       const submitButton = editForm.querySelector('button[onclick="submitCampaign()"]');
       if (submitButton) {
          submitButton.onclick = () => submitCampaignUpdate();
          submitButton.textContent = 'Update Campaign';
+      }
+      
+      // Load existing progress details (use the renamed ID: editProgressDetailsContainer)
+      if (campaign.progressDetails && campaign.progressDetails.length > 0) {
+        console.log('🔍 Loading existing progress details:', campaign.progressDetails.length);
+        const progressContainer = editForm.querySelector('#editProgressDetailsContainer');
+        if (progressContainer) {
+          console.log('✅ Found edit progress container with ID:', progressContainer.id);
+          campaign.progressDetails.forEach(detail => {
+            const detailId = 'progress_' + Date.now() + '_' + Math.random();
+            const detailHTML = `
+              <div id="${detailId}" class="bg-white p-4 rounded-lg border border-gray-200 mb-3">
+                <div class="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" class="progress-date w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="${detail.date || ''}">
+                  </div>
+                  <div class="flex items-end">
+                    <button type="button" onclick="removeProgressDetail('${detailId}')" class="text-gray-500 hover:text-gray-700 px-2 py-2">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea class="progress-description w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" rows="3" placeholder="Enter progress details...">${detail.description || ''}</textarea>
+                </div>
+              </div>
+            `;
+            progressContainer.insertAdjacentHTML('beforeend', detailHTML);
+          });
+          console.log('✅ Loaded', campaign.progressDetails.length, 'progress details successfully');
+        } else {
+          console.error('❌ Could not find editProgressDetailsContainer for loading existing details');
+        }
       }
       
       // Show the form
@@ -1983,45 +2132,6 @@
       // Channel functionality removed - no longer needed
 
        // Channel functionality removed - no longer needed
-        
-        // Re-attach category removal event listeners AFTER form data is filled
-        updateRemoveCategoryBtns();
-        
-        // Re-attach add category button functionality for edit form
-        const editAddCategoryBtn = editForm.querySelector('#addCategoryBtn');
-        if (editAddCategoryBtn) {
-            editAddCategoryBtn.onclick = function() {
-                console.log('Add Category button clicked in edit form');
-                const catContainer = editForm.querySelector('#targetCategoryContainer');
-                const div = document.createElement('div');
-                div.className = 'targetCategorySelect flex flex-wrap items-center gap-2';
-                div.innerHTML = `<select class="targetCategory flex-1 min-w-0 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">Select Category</option>
-                    <option>Tourist</option>
-                    <option>Resident</option>
-                    <option>All Walkin</option>
-                    <option>Social Media</option>
-                    <option>Social Groups</option>
-                    <option>What'sup group</option>
-                    <option>Corporates</option>
-                    <option>Residential Cmty</option>
-                    <option>Local Cmty</option>
-                    <option>Blue collar wrkrs</option>
-                    <option>Existing cutomers</option>
-                    <option>HNTW</option>
-                    <option>Channel Partner</option>
-                    <option>DGJG</option>
-                    <option>Hotels</option>
-                    <option>Tourism Companies</option>
-                    <option>Tour Drivers</option>
-                    <option>Other Tours Assctd cmpy</option>
-                    <option>Festival & Occasion Buyers</option>
-                    <option>Product Launch</option>
-                </select><input type="text" class="categoryTag w-32 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Tag"><button type="button" class="removeCategoryBtn text-red-500 px-2 py-2 hover:bg-red-50 rounded">✕</button>`;
-                catContainer.appendChild(div);
-                updateRemoveCategoryBtns();
-            };
-        }
     }
 
     function fillFormWithCampaignData(form, campaign) {
@@ -2090,102 +2200,6 @@
 
 
     // Employee Management Functions
-    function addEmployeeEntry() {
-      // Check if user is logged in
-      const token = getAuthToken();
-      if (!token) {
-        alert('Please log in first to add employees to jobs.');
-        return;
-      }
-      
-      // Find the container - could be in main form or edit form
-      let container = document.getElementById('assignedEmployeesContainer');
-      
-      // If not found in main document, look in edit form
-      if (!container) {
-        const editForm = document.getElementById('editCampaignForm');
-        if (editForm) {
-          container = editForm.querySelector('#assignedEmployeesContainer');
-        }
-      }
-      
-      if (!container) {
-        console.error('❌ assignedEmployeesContainer not found');
-        console.log('Searched in main document and edit form');
-        alert('Error: Employee container not found');
-        return;
-      }
-      
-      console.log('✅ Found assignedEmployeesContainer:', container);
-      
-      const employeeEntry = document.createElement('div');
-      employeeEntry.className = 'employee-entry flex gap-2 items-end p-3 border rounded-md bg-gray-50';
-      
-      employeeEntry.innerHTML = `
-        <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-          <select class="employee-select w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">Select Employee</option>
-          </select>
-        </div>
-        <button type="button" onclick="removeEmployeeEntry(this)" class="text-gray-500 hover:text-red-500">
-          ✕
-              </button>
-      `;
-      
-      container.appendChild(employeeEntry);
-      
-      // Load employees into the new dropdown
-      const selectElement = employeeEntry.querySelector('.employee-select');
-      loadEmployeesIntoSelect(selectElement);
-      
-      // Add change event listener to prevent duplicate selections
-      selectElement.addEventListener('change', function() {
-        validateEmployeeSelections();
-      });
-    }
-
-    function removeEmployeeEntry(button) {
-      button.closest('.employee-entry').remove();
-      // Re-validate after removing an entry
-      validateEmployeeSelections();
-    }
-
-    // Function to add progress detail entry
-    function addProgressDetail() {
-      const container = document.getElementById('progressDetailsContainer');
-      const detailId = 'progress_' + Date.now();
-      
-      const detailHTML = `
-        <div id="${detailId}" class="bg-white p-4 rounded-lg border border-gray-200 mb-3">
-          <div class="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Date</label>
-              <input type="date" class="progress-date w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="${new Date().toISOString().split('T')[0]}">
-            </div>
-            <div class="flex items-end">
-              <button type="button" onclick="removeProgressDetail('${detailId}')" class="text-gray-500 hover:text-gray-700 px-2 py-2">
-                ✕
-              </button>
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Description</label>
-            <textarea class="progress-description w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" rows="3" placeholder="Enter progress details..."></textarea>
-          </div>
-            </div>
-      `;
-      
-      container.insertAdjacentHTML('beforeend', detailHTML);
-    }
-    
-    // Function to remove progress detail entry
-    function removeProgressDetail(detailId) {
-      const element = document.getElementById(detailId);
-      if (element) {
-        element.remove();
-      }
-    }
     
     // Function to handle file upload
     function handleFileUpload() {
@@ -2297,6 +2311,14 @@
         const employees = await response.json();
         console.log('Employees loaded:', employees.length);
         
+        // Add "All Employees" option
+        const allOption = document.createElement('option');
+        allOption.value = 'ALL_EMPLOYEES';
+        allOption.textContent = '👥 All Employees';
+        allOption.style.fontWeight = 'bold';
+        allOption.style.backgroundColor = '#F3F4F6';
+        selectElement.appendChild(allOption);
+        
         employees.forEach(employee => {
           if (employee.status === 'active') {
             const option = document.createElement('option');
@@ -2306,7 +2328,7 @@
           }
         });
         
-        console.log('✅ Employee dropdown populated successfully');
+        console.log('✅ Employee dropdown populated successfully (including All Employees option)');
       } catch (error) {
         console.error('❌ Error loading employees:', error);
         // Show error in dropdown
@@ -2359,19 +2381,58 @@
       }
       console.log('✅ [DEBUG] Validation passed - no duplicates');
 
-      // Collect assigned employees AFTER validation
+      // Collect assigned employees AFTER validation - ONLY from the new campaign form
       const assignedEmployees = [];
-      const employeeEntries = document.querySelectorAll('.employee-entry');
+      const newCampaignForm = document.getElementById('new-campaign');
+      const employeeEntries = newCampaignForm.querySelectorAll('#assignedEmployeesContainer .employee-entry');
+      console.log('🔍 [DEBUG] Collecting employees from NEW campaign form only, found:', employeeEntries.length);
+      
+      // Check if "All Employees" was selected
+      let hasAllEmployees = false;
       employeeEntries.forEach(entry => {
         const employeeSelect = entry.querySelector('.employee-select');
-        if (employeeSelect.value) {
-          assignedEmployees.push({
-            employeeId: employeeSelect.value,
-            employeeName: employeeSelect.value,
-            assignedAt: new Date().toISOString()
-          });
+        if (employeeSelect.value === 'ALL_EMPLOYEES') {
+          hasAllEmployees = true;
         }
       });
+      
+      if (hasAllEmployees) {
+        // Fetch all active employees
+        console.log('🔍 [DEBUG] "All Employees" selected - fetching all active employees');
+        try {
+          const response = await fetch('/api/employees', {
+            headers: getAuthHeaders()
+          });
+          const allEmployees = await response.json();
+          allEmployees.forEach(employee => {
+            if (employee.status === 'active') {
+              assignedEmployees.push({
+                employeeId: employee.name,
+                employeeName: employee.name,
+                assignedAt: new Date().toISOString()
+              });
+            }
+          });
+          console.log('✅ [DEBUG] Added all active employees:', assignedEmployees.length);
+        } catch (error) {
+          console.error('❌ Error fetching employees for ALL_EMPLOYEES:', error);
+          alert('Error: Could not fetch employees list.');
+          return;
+        }
+      } else {
+        // Collect individual employees
+        employeeEntries.forEach(entry => {
+          const employeeSelect = entry.querySelector('.employee-select');
+          if (employeeSelect.value) {
+            console.log('🔍 [DEBUG] Adding employee to new job:', employeeSelect.value);
+            assignedEmployees.push({
+              employeeId: employeeSelect.value,
+              employeeName: employeeSelect.value,
+              assignedAt: new Date().toISOString()
+            });
+          }
+        });
+      }
 
       // Validate that all employee entries have selected employees
       const unselectedEmployees = [];
@@ -2414,7 +2475,7 @@
         actualStartDate: document.getElementById('actualStartDate').value,
         endDate: document.getElementById('endDate').value,
         status: document.getElementById('status').value,
-        priority: document.getElementById('priority').value,
+        priority: document.getElementById('priority').value || 'Normal',
         assignedEmployees: assignedEmployees, // New field for multiple employees
         progressDetails: progressDetails,
         files: files
@@ -2992,7 +3053,28 @@
                   result.assignedEmployees.map(emp => emp.employeeName || emp.employeeId).join(', ') : 
                   (result.jobAssignedTo || 'N/A')}</p>
                 </div>
+            </div>
+
+            <!-- Progress Details -->
+            ${result.progressDetails && result.progressDetails.length > 0 ? `
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                <label class="block text-sm font-medium text-purple-700">Progress Details</label>
+                <div class="space-y-2 mt-2">
+                  ${result.progressDetails.map(detail => `
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                          <p class="text-sm font-medium text-gray-700">📅 ${detail.date ? formatDateDDMMYY(detail.date) : 'No date'}</p>
+                          <p class="text-base text-gray-900 mt-1">${detail.description || 'No description'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  `).join('')}
                 </div>
+                </div>
+            </div>
+            ` : ''}
 
           </div>`;
         queryCampaignForm.innerHTML = formHTML;
@@ -3392,11 +3474,17 @@
       // Fill in the form with campaign data
       fillFormWithCampaignData(editForm, campaign);
 
-      // Fix ID conflict by giving edit form container a unique ID
+      // Fix ID conflict by giving edit form containers unique IDs
       const assignedEmployeesContainer = editForm.querySelector('#assignedEmployeesContainer');
       if (assignedEmployeesContainer) {
         assignedEmployeesContainer.id = 'editAssignedEmployeesContainer';
-        console.log('✅ Changed edit form container ID to editAssignedEmployeesContainer');
+        console.log('✅ Changed edit form employees container ID to editAssignedEmployeesContainer');
+      }
+
+      const progressDetailsContainer = editForm.querySelector('#progressDetailsContainer');
+      if (progressDetailsContainer) {
+        progressDetailsContainer.id = 'editProgressDetailsContainer';
+        console.log('✅ Changed edit form progress container ID to editProgressDetailsContainer');
       }
 
       // Load assigned employees into the edit form
@@ -3415,11 +3503,59 @@
         console.log('❌ Add Employee button not found in edit form');
       }
 
+      // Attach Add Details button functionality to edit form
+      const addDetailsBtn = editForm.querySelector('button[onclick="addProgressDetail()"]');
+      console.log('🔍 Looking for Add Details button in edit form:', addDetailsBtn);
+      if (addDetailsBtn) {
+        console.log('✅ Found Add Details button, attaching click handler');
+        addDetailsBtn.onclick = function() {
+          console.log('Add Details button clicked in edit form');
+          addProgressDetail();
+        };
+      } else {
+        console.log('❌ Add Details button not found in edit form');
+      }
+
       // Modify the submit button to handle updates
       const submitButton = editForm.querySelector('button[onclick="submitCampaign()"]');
       if (submitButton) {
          submitButton.onclick = () => submitCampaignUpdate();
          submitButton.textContent = 'Update Campaign';
+      }
+      
+      // Load existing progress details (use the renamed ID: editProgressDetailsContainer)
+      if (campaign.progressDetails && campaign.progressDetails.length > 0) {
+        console.log('🔍 Loading existing progress details:', campaign.progressDetails.length);
+        const progressContainer = editForm.querySelector('#editProgressDetailsContainer');
+        if (progressContainer) {
+          console.log('✅ Found edit progress container with ID:', progressContainer.id);
+          campaign.progressDetails.forEach(detail => {
+            const detailId = 'progress_' + Date.now() + '_' + Math.random();
+            const detailHTML = `
+              <div id="${detailId}" class="bg-white p-4 rounded-lg border border-gray-200 mb-3">
+                <div class="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" class="progress-date w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" value="${detail.date || ''}">
+                  </div>
+                  <div class="flex items-end">
+                    <button type="button" onclick="removeProgressDetail('${detailId}')" class="text-gray-500 hover:text-gray-700 px-2 py-2">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea class="progress-description w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" rows="3" placeholder="Enter progress details...">${detail.description || ''}</textarea>
+                </div>
+              </div>
+            `;
+            progressContainer.insertAdjacentHTML('beforeend', detailHTML);
+          });
+          console.log('✅ Loaded', campaign.progressDetails.length, 'progress details successfully');
+        } else {
+          console.error('❌ Could not find editProgressDetailsContainer for loading existing details');
+        }
       }
       
       // Show the form
@@ -3429,45 +3565,6 @@
       // Channel functionality removed - no longer needed
 
        // Channel functionality removed - no longer needed
-        
-        // Re-attach category removal event listeners AFTER form data is filled
-        updateRemoveCategoryBtns();
-        
-        // Re-attach add category button functionality for edit form
-        const editAddCategoryBtn = editForm.querySelector('#addCategoryBtn');
-        if (editAddCategoryBtn) {
-            editAddCategoryBtn.onclick = function() {
-                console.log('Add Category button clicked in edit form');
-                const catContainer = editForm.querySelector('#targetCategoryContainer');
-                const div = document.createElement('div');
-                div.className = 'targetCategorySelect flex flex-wrap items-center gap-2';
-                div.innerHTML = `<select class="targetCategory flex-1 min-w-0 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">Select Category</option>
-                    <option>Tourist</option>
-                    <option>Resident</option>
-                    <option>All Walkin</option>
-                    <option>Social Media</option>
-                    <option>Social Groups</option>
-                    <option>What'sup group</option>
-                    <option>Corporates</option>
-                    <option>Residential Cmty</option>
-                    <option>Local Cmty</option>
-                    <option>Blue collar wrkrs</option>
-                    <option>Existing cutomers</option>
-                    <option>HNTW</option>
-                    <option>Channel Partner</option>
-                    <option>DGJG</option>
-                    <option>Hotels</option>
-                    <option>Tourism Companies</option>
-                    <option>Tour Drivers</option>
-                    <option>Other Tours Assctd cmpy</option>
-                    <option>Festival & Occasion Buyers</option>
-                    <option>Product Launch</option>
-                </select><input type="text" class="categoryTag w-32 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Tag"><button type="button" class="removeCategoryBtn text-red-500 px-2 py-2 hover:bg-red-50 rounded">✕</button>`;
-                catContainer.appendChild(div);
-                updateRemoveCategoryBtns();
-            };
-        }
     }
 
     // Load assigned employees into edit form
@@ -3526,151 +3623,6 @@
 
     // A variation of addChannelEntry for the edit form to ensure correct scoping
     // Channel functionality removed - this function is no longer needed
-
-    async function submitCampaignUpdate() {
-      try {
-        // Check if user is logged in
-        const token = getAuthToken();
-        if (!token) {
-          alert('Please log in first to update jobs.');
-          return;
-        }
-        
-        // Get the edit form
-        const editForm = document.getElementById('editCampaignForm');
-        
-        // Validate category selection
-        const editCategorySelects = editForm.querySelectorAll('.targetCategory');
-        // All dropdowns must be selected (not empty)
-        const allCategoriesSelected = Array.from(editCategorySelects).every(select => select.value && select.value.trim() !== '');
-        if (!allCategoriesSelected) {
-          alert('⚠️ Warning: Please select a category for every row before updating the job.');
-          return;
-        }
-        
-        // Validate Status (mandatory)
-        const status = editForm.querySelector('#status')?.value;
-        if (!status || status.trim() === '') {
-          alert('⚠️ Warning: Status is mandatory. Please select a status for this job.');
-          return;
-        }
-        
-        // Validate Planned Start Date (mandatory only when status is "Planned")
-        const plannedStartDate = editForm.querySelector('#plannedStartDate')?.value;
-        if (status === 'Planned' && (!plannedStartDate || plannedStartDate.trim() === '')) {
-          alert('⚠️ Warning: Planned Start Date is mandatory when status is "Planned". Please select a planned start date for this job.');
-          return;
-        }
-        
-        if (!editForm) {
-          throw new Error('Edit form not found');
-        }
-
-        // Get the MongoDB _id from the hidden input
-        const mongoIdInput = editForm.querySelector('#editCampaignMongoId');
-        if (!mongoIdInput || !mongoIdInput.value) {
-          throw new Error('Campaign ID for update not found');
-        }
-        const campaignId = mongoIdInput.value;
-
-        // Gather all categories and tags
-        const categorySelects = editForm.querySelectorAll('.targetCategory');
-        const tagInputs = editForm.querySelectorAll('.categoryTag');
-        const categories = Array.from(categorySelects).map((sel, idx) => {
-          return {
-            category: sel.value,
-            tag: tagInputs[idx] ? tagInputs[idx].value : ''
-          };
-        }).filter(obj => obj.category);
-
-        // Get all form fields
-        const formData = {
-          campaignId: editForm.querySelector('#campaignId')?.value || '',
-          name: editForm.querySelector('#name')?.value || '',
-          description: editForm.querySelector('#description')?.value || '',
-          plannedStartDate: editForm.querySelector('#plannedStartDate')?.value || '',
-          startDate: editForm.querySelector('#startDate')?.value || '',
-          endDate: editForm.querySelector('#endDate')?.value || '',
-          budget: parseFloat(editForm.querySelector('#budget')?.value) || 0,
-          status: editForm.querySelector('#status')?.value || 'Active',
-          jobAssignedTo: editForm.querySelector('#jobAssignedTo')?.value || '',
-          targetAudience: {
-            age: editForm.querySelector('#targetAge')?.value || '',
-            gender: editForm.querySelector('#targetGender')?.value || 'All',
-            categories: categories
-          },
-          goals: {
-            sales: parseFloat(editForm.querySelector('#goalSales')?.value) || 0,
-            impressions: parseFloat(editForm.querySelector('#goalImpressions')?.value) || 0,
-            conversions: parseFloat(editForm.querySelector('#goalConversions')?.value) || 0,
-          },
-          achieved: {
-            sales: parseFloat(editForm.querySelector('#achievedSales')?.value) || 0,
-            impressions: parseFloat(editForm.querySelector('#achievedImpressions')?.value) || 0,
-            conversions: parseFloat(editForm.querySelector('#achievedConversions')?.value) || 0,
-          },
-          channels: []
-        };
-
-        // Collect assigned employees from edit form
-        const assignedEmployees = [];
-        const editEmployeeEntries = editForm.querySelectorAll('#editAssignedEmployeesContainer .employee-entry');
-        editEmployeeEntries.forEach(entry => {
-          const employeeSelect = entry.querySelector('.employee-select');
-          if (employeeSelect.value) {
-            assignedEmployees.push({
-              employeeId: employeeSelect.value,
-              employeeName: employeeSelect.value
-            });
-          }
-        });
-
-        // Validate that all employee entries have selected employees
-        const unselectedEmployees = [];
-        editEmployeeEntries.forEach((entry, index) => {
-          const employeeSelect = entry.querySelector('.employee-select');
-          if (!employeeSelect.value || employeeSelect.value === '') {
-            unselectedEmployees.push(index + 1);
-          }
-        });
-
-        if (unselectedEmployees.length > 0) {
-          alert(`⚠️ Warning: Please select an employee for all employee entries.\n\nUnselected entries: ${unselectedEmployees.join(', ')}`);
-          return;
-        }
-
-        // Validate that no employee is selected more than once (only within this form)
-        if (!validateEmployeeSelections()) {
-          alert(`⚠️ Warning: Some employees are selected more than once in this job.\n\nPlease select each employee only once.`);
-          return;
-        }
-
-        formData.assignedEmployees = assignedEmployees;
-
-        console.log('📝 Collected assigned employees for update:', assignedEmployees);
-
-        // Send update request
-        const response = await fetch(`/api/campaigns/${campaignId}`, {
-          method: 'PUT',
-          headers: getAuthHeaders(),
-          body: JSON.stringify(formData)
-        });
-        const result = await response.json();
-        if (response.ok) {
-          alert('Job updated successfully!');
-          showSection('campaigns-table');
-          // Reload campaigns to show updated data
-          console.log('[DEBUG] Job updated successfully, refreshing campaigns table...');
-          setTimeout(() => {
-            loadCampaignsTable();
-          }, 100);
-        } else {
-          throw new Error('Server returned an error: ' + JSON.stringify(result));
-        }
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    }
 
     function fillFormWithCampaignData(form, campaign) {
       console.log('=== fillFormWithCampaignData called ===');
@@ -3865,7 +3817,7 @@
         const priorityFilter = document.getElementById('filter-priority')?.value || '';
         if (priorityFilter) {
           if (priorityFilter === 'High' && campaign.priority !== 'High') return false;
-          if (priorityFilter === 'No Priority' && campaign.priority && campaign.priority !== '') return false;
+          if (priorityFilter === 'Normal' && campaign.priority && campaign.priority !== 'Normal') return false;
         }
         
         // Job Assigned To filter - check both assignedEmployees and jobAssignedTo
@@ -3913,7 +3865,7 @@
             <td>${actualStartDate}</td>
             <td>${endDate}</td>
             <td>${campaign.status || ''}</td>
-            <td>${campaign.priority === 'High' ? '<span class="priority-badge priority-high">High Priority</span>' : ''}</td>
+            <td>${campaign.priority === 'High' ? '<span class="priority-badge priority-high">High Priority</span>' : (campaign.priority || 'Normal')}</td>
             <td>${campaign.assignedEmployees && campaign.assignedEmployees.length > 0 ? 
               campaign.assignedEmployees.map(emp => emp.employeeName || emp.employeeId).join(', ') : 
               (campaign.jobAssignedTo || '')}</td>

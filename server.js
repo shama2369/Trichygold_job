@@ -202,7 +202,16 @@ app.post('/api/jobs', verifyToken, async (req, res) => {
 app.put('/api/campaigns/:campaignId', verifyToken, async (req, res) => {
   try {
     const campaignId = req.params.campaignId;
-    const campaignData = req.body;
+    const requestBody = req.body;
+    
+    console.log('=== CAMPAIGN UPDATE DEBUG ===');
+    console.log('Campaign ID (MongoDB _id):', campaignId);
+    console.log('Request body received:', JSON.stringify(requestBody, null, 2));
+    
+    // Extract the actual campaign data from the nested structure
+    const campaignData = requestBody.campaignData || requestBody;
+    
+    console.log('Extracted campaign data:', JSON.stringify(campaignData, null, 2));
     
     if (!campaignData) {
       return res.status(400).json({ error: 'No campaign data provided' });
@@ -262,27 +271,42 @@ app.put('/api/campaigns/:campaignId', verifyToken, async (req, res) => {
     }
     
     const campaigns = db.collection('jobcollection');
+    
+    // Get existing job data first to find assigned employees for notifications
+    const existingJob = await campaigns.findOne({ _id: new ObjectId(campaignId) });
+    if (!existingJob) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    
+    console.log('=== DATABASE UPDATE DEBUG ===');
+    console.log('Updating campaign with _id:', campaignId);
+    console.log('Update data:', JSON.stringify(campaignData, null, 2));
+    
     const result = await campaigns.updateOne(
       { _id: new ObjectId(campaignId) },
       { $set: campaignData },
       { upsert: false }
     );
     
+    console.log('Update result:', result);
+    
     if (result.matchedCount === 0) {
       return res.status(404).json({ error: 'Campaign not found' });
     }
 
+    console.log('✅ Database update successful');
+
     // Send WhatsApp notification if job details are updated and assigned to employees
     const employeesToNotify = [];
     
-    // Check for single employee assignment (legacy)
-    if (campaignData.jobAssignedTo) {
-      employeesToNotify.push(campaignData.jobAssignedTo);
+    // Check for single employee assignment (legacy) - use existing job data
+    if (existingJob.jobAssignedTo) {
+      employeesToNotify.push(existingJob.jobAssignedTo);
     }
     
-    // Check for multiple employee assignments (new system)
-    if (campaignData.assignedEmployees && Array.isArray(campaignData.assignedEmployees)) {
-      campaignData.assignedEmployees.forEach(emp => {
+    // Check for multiple employee assignments (new system) - use existing job data
+    if (existingJob.assignedEmployees && Array.isArray(existingJob.assignedEmployees)) {
+      existingJob.assignedEmployees.forEach(emp => {
         if (emp.employeeName && !employeesToNotify.includes(emp.employeeName)) {
           employeesToNotify.push(emp.employeeName);
         }
@@ -291,12 +315,15 @@ app.put('/api/campaigns/:campaignId', verifyToken, async (req, res) => {
     
     console.log('📱 Employees to notify for update:', employeesToNotify);
     
+    // Get the updated job data after the update for complete notification information
+    const updatedJob = await campaigns.findOne({ _id: new ObjectId(campaignId) });
+    
     // Send notifications to all assigned employees
     for (const employeeName of employeesToNotify) {
       try {
         const employeePhone = await getEmployeePhoneNumber(employeeName, db);
         if (employeePhone) {
-          await twilioService.sendJobUpdateNotification(campaignData, employeePhone, 'details');
+          await twilioService.sendJobUpdateNotification(updatedJob, employeePhone, 'details');
           console.log(`✅ WhatsApp update notification sent to ${employeeName} (${employeePhone})`);
         } else {
           console.log(`❌ No WhatsApp number found for employee: ${employeeName}`);

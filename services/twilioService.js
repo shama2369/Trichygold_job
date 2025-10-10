@@ -40,14 +40,27 @@ class TwilioService {
     }
 
     try {
+      // Get assigned employees list for display
+      let assignedToText = 'Multiple employees';
+      if (jobData.assignedEmployees && jobData.assignedEmployees.length === 1) {
+        assignedToText = jobData.assignedEmployees[0].employeeName;
+      } else if (jobData.assignedEmployees && jobData.assignedEmployees.length > 1) {
+        const names = jobData.assignedEmployees.map(emp => emp.employeeName).join(', ');
+        assignedToText = names;
+      } else if (jobData.jobAssignedTo) {
+        assignedToText = jobData.jobAssignedTo;
+      }
+
       const message = `🎯 *New Job Assigned*\n\n` +
-        `*Job ID:* ${jobData.campaignId || jobData.jobId}\n` +
-        `*Title:* ${jobData.jobTitle}\n` +
-        `*Description:* ${jobData.jobDescription}\n` +
+        `*Job ID:* ${jobData.campaignId || jobData.jobId || 'N/A'}\n` +
+        `*Title:* ${jobData.name || 'N/A'}\n` +
+        `*Description:* ${jobData.description || 'N/A'}\n` +
+        `*Status:* ${jobData.status || 'N/A'}\n` +
         `*Priority:* ${jobData.priority || 'Normal'}\n` +
-        `*Start Date:* ${jobData.plannedStartDate}\n` +
-        `*End Date:* ${jobData.plannedEndDate}\n` +
-        `*Assigned To:* ${jobData.jobAssignedTo}\n\n` +
+        `*Planned Start Date:* ${jobData.plannedStartDate || 'N/A'}\n` +
+        `*Actual Start Date:* ${jobData.actualStartDate || 'N/A'}\n` +
+        `*End Date:* ${jobData.endDate || 'N/A'}\n` +
+        `*Assigned To:* ${assignedToText}\n\n` +
         `Please check the system for more details. Good luck! 🚀`;
 
       const result = await this.client.messages.create({
@@ -71,30 +84,50 @@ class TwilioService {
     }
 
     try {
+      // Get assigned employees list for display (same logic as assignment notification)
+      let assignedToText = 'Multiple employees';
+      if (jobData.assignedEmployees && jobData.assignedEmployees.length === 1) {
+        assignedToText = jobData.assignedEmployees[0].employeeName;
+      } else if (jobData.assignedEmployees && jobData.assignedEmployees.length > 1) {
+        const names = jobData.assignedEmployees.map(emp => emp.employeeName).join(', ');
+        assignedToText = names;
+      } else if (jobData.jobAssignedTo) {
+        assignedToText = jobData.jobAssignedTo;
+      }
+
       let message = '';
       
       if (updateType === 'details') {
         message = `📝 *Job Details Updated*\n\n` +
-          `*Job ID:* ${jobData.campaignId || jobData.jobId}\n` +
-          `*Title:* ${jobData.jobTitle}\n` +
-          `*Updated By:* System\n` +
-          `*Update Time:* ${new Date().toLocaleString()}\n\n` +
+          `*Job ID:* ${jobData.campaignId || jobData.jobId || 'N/A'}\n` +
+          `*Title:* ${jobData.name || 'N/A'}\n` +
+          `*Description:* ${jobData.description || 'N/A'}\n` +
+          `*Priority:* ${jobData.priority || 'Normal'}\n` +
+          `*Planned Start Date:* ${jobData.plannedStartDate || 'N/A'}\n` +
+          `*Actual Start Date:* ${jobData.actualStartDate || 'N/A'}\n` +
+          `*End Date:* ${jobData.endDate || 'N/A'}\n` +
+          `*Assigned To:* ${assignedToText}\n` +
+          `*Status:* ${jobData.status || 'N/A'}\n\n` +
           `Please check the system for the latest updates.`;
       } else if (updateType === 'status') {
         message = `🔄 *Job Status Updated*\n\n` +
-          `*Job ID:* ${jobData.campaignId || jobData.jobId}\n` +
-          `*Title:* ${jobData.jobTitle}\n` +
-          `*New Status:* ${jobData.status}\n` +
-          `*Updated By:* System\n` +
-          `*Update Time:* ${new Date().toLocaleString()}\n\n` +
+          `*Job ID:* ${jobData.campaignId || jobData.jobId || 'N/A'}\n` +
+          `*Title:* ${jobData.name || 'N/A'}\n` +
+          `*New Status:* ${jobData.status || 'N/A'}\n` +
+          `*Priority:* ${jobData.priority || 'Normal'}\n` +
+          `*Planned Start Date:* ${jobData.plannedStartDate || 'N/A'}\n` +
+          `*Actual Start Date:* ${jobData.actualStartDate || 'N/A'}\n` +
+          `*Assigned To:* ${assignedToText}\n\n` +
           `Please check the system for more details.`;
       } else if (updateType === 'priority') {
         message = `⚡ *Job Priority Updated*\n\n` +
-          `*Job ID:* ${jobData.campaignId || jobData.jobId}\n` +
-          `*Title:* ${jobData.jobTitle}\n` +
-          `*New Priority:* ${jobData.priority}\n` +
-          `*Updated By:* System\n` +
-          `*Update Time:* ${new Date().toLocaleString()}\n\n` +
+          `*Job ID:* ${jobData.campaignId || jobData.jobId || 'N/A'}\n` +
+          `*Title:* ${jobData.name || 'N/A'}\n` +
+          `*New Priority:* ${jobData.priority || 'Normal'}\n` +
+          `*Status:* ${jobData.status || 'N/A'}\n` +
+          `*Planned Start Date:* ${jobData.plannedStartDate || 'N/A'}\n` +
+          `*Actual Start Date:* ${jobData.actualStartDate || 'N/A'}\n` +
+          `*Assigned To:* ${assignedToText}\n\n` +
           `Please check the system for more details.`;
       }
 
