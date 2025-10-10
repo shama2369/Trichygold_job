@@ -563,6 +563,11 @@ app.get('/api/campaigns/export', verifyToken, async (req, res) => {
         return baseInfo;
       }).join('; ') : '';
       
+      // Get assigned employees names
+      const assignedEmployeesText = campaign.assignedEmployees && campaign.assignedEmployees.length > 0
+        ? campaign.assignedEmployees.map(emp => emp.employeeName || emp.employeeId).join(', ')
+        : (campaign.jobAssignedTo || '');
+      
       worksheet.addRow({
         campaignId: campaign.campaignId,
         name: campaign.name,
@@ -572,7 +577,7 @@ app.get('/api/campaigns/export', verifyToken, async (req, res) => {
         actualStartDate: campaign.actualStartDate,
         endDate: campaign.endDate,
         status: campaign.status,
-        jobAssignedTo: campaign.jobAssignedTo,
+        jobAssignedTo: assignedEmployeesText,
       });
     });
     
